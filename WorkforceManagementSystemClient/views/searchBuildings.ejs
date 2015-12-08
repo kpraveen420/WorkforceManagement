@@ -1,0 +1,292 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workforce Management System</title>
+
+    <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/css/local.css" />
+
+    <script type="text/javascript" src="/stylesheets/js/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="/stylesheets/bootstrap/js/bootstrap.min.js"></script>   
+    
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>  
+	
+	<script>
+	var app = angular.module('myApp', []);
+		function searchClientsController($scope,$http,$location) { 	
+			var buildingId;
+			$scope.errorPanel = false;
+			
+			$scope.roleId = <%- JSON.stringify(roleId) %>;
+			
+			$scope.startSearch = function() {	
+				$scope.errorPanel = false;
+				$scope.successPanel = false;
+				$scope.resultsExist = false;				
+				$scope.resultsNotExist = false;
+				$scope.checkpointsExist = false;
+	    		$http({
+		            method: 'GET',
+		            url: '/searchBuildingByName/'+$scope.searchString		                   		           
+			         }).success(function(response){	   
+			         	if(response.Status == "Success")
+			         	{			         		
+			         		$scope.buildings = response.rows;
+			         		$scope.resultsExist = true;					         			         	
+			         	} 	
+						else
+						{
+							$scope.errorPanel = true;
+							$scope.errorMsg = response.Status;
+						}	         				         					         	   
+			        }).error(function(error){
+			            $scope.errorPanel = true;
+						$scope.errorMsg = response.Status;
+			        });								
+			}	
+			
+			$scope.selectionChanged =  function() {		
+				$scope.errorPanel = false;	
+				if(buildingId != $scope.selectedBuilding.buildingId)
+				{
+					$scope.successPanel = false;
+				}												
+				$http({
+		            method: 'GET',
+		            url: '/getCheckpointsByBuilding/'+$scope.selectedBuilding.buildingId		                   		           
+			         }).success(function(response){	   
+			         	if(response.Status == "Success")
+			         	{			         					         		
+			         		$scope.checkpoints = response.rows;			         		
+			         		$scope.checkpointsExist = true;	
+			         		$scope.selectedGuard = [];
+			         		//alert(JSON.stringify($scope.checkpoints));
+							angular.forEach($scope.checkpoints, function (a) {
+							    $scope.selectedGuard.push({
+							        selectedGuardId: a.guardId							        
+							    });
+							});
+							//alert(JSON.stringify($scope.selectedGuard));
+							
+							buildingId = $scope.selectedBuilding.buildingId;
+			         		
+			         		$http({
+			         			method: 'GET',
+			         			url: '/getAllGuards',			         			
+			         			}).success(function(response){
+			         			if(response.Status == "Success")
+			         			{			         				
+			         				$scope.guards = response.result;			         				
+		         				}
+		         				else
+		         				{
+		         					$scope.errorPanel = true;		         					
+		         					$scope.errorMsg = response.Status;
+		         				}
+	         				}).error(function(error){
+	         					$scope.errorPanel = true;	         			
+	         					$scope.errorMsg = response.Status;
+	         				});			         			         	
+			         	} 	
+						else
+						{
+							$scope.errorPanel = true;
+							$scope.errorMsg = response.Status;
+							$scope.checkpointsExist = false;
+						}	         				         					         	   
+			        }).error(function(error){
+			            $scope.errorPanel = true;
+						$scope.errorMsg = response.Status;
+			        });								
+			}	
+			
+			$scope.saveChanges =  function() {			
+				$scope.errorPanel = false;
+				$scope.successPanel = false;
+				var originalData = [];				
+				angular.forEach($scope.checkpoints, function (value,key) {
+				    originalData.push({
+				    	guardId: value.guardId,
+				    	checkinId: value.checkinId
+				    });					        
+			    })  						    
+				$http({
+	         			method: 'PUT',
+	         			url: '/updateCheckpointGuard',	
+	         			data: { 'originalData' : originalData, 'updatedData' : $scope.selectedGuard }		         			
+	         			}).success(function(response){
+	         			if(response.Status == "Success")
+	         			{			         					         				
+	         				$scope.successPanel = true;
+							$scope.successMsg = "Updated checkpoints successfully!";
+							$scope.selectionChanged();
+         				}
+         				else
+         				{
+         					$scope.errorPanel = true;
+							$scope.errorMsg = response.Status;
+         				}
+     				}).error(function(error){
+     					$scope.errorPanel = true;
+						$scope.errorMsg = response.Status;
+     				});	
+			}
+			
+			$scope.unassignGuard = function(i) {
+				$scope.errorPanel = false;
+				$scope.successPanel = false;
+				var checkinId = $scope.checkpoints[i].checkinId;
+				alert(checkinId);
+				$http({
+	         			method: 'PUT',
+	         			url: '/unassignGuard',	
+	         			data: { 'checkinId' : checkinId }		         			
+	         			}).success(function(response){
+	         			if(response.Status == "Success")
+	         			{			         					         				
+	         				$scope.successPanel = true;
+							$scope.successMsg = "Unassigned guard successfully!";
+							$scope.selectionChanged();
+         				}
+         				else
+         				{
+         					$scope.errorPanel = true;
+							$scope.errorMsg = response.Status;
+         				}
+     				}).error(function(error){
+     					$scope.errorPanel = true;
+						$scope.errorMsg = response.Status;
+     				});	
+			}									
+		}    
+	</script> 		  
+</head>
+<body ng-app="myApp" ng-controller="searchClientsController">
+
+    <div id="wrapper">
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">                    
+        	<div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+               <div class="navbar-brand" >Work Force Management System</div>
+            </div>
+            <div class="collapse navbar-collapse navbar-ex1-collapse" >
+            <div ng-show="roleId == 1">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li><a href="/searchClients"><i class="fa fa-tasks"></i> Clients</a></li>
+                    <li><a href="/searchGuards"><i class="fa fa-tasks"></i> Guards</a></li>
+                    <li><a href="/searchReports"><i class="fa fa-table"></i> Reports</a></li>
+                    <li><a href="/searchAlerts"><i class="fa fa-bell"></i> Alerts</a></li>                    
+                    <li  class="active"><a href="/searchBuildings"><i class="fa fa-list-ol"></i> Schedule</a></li>                    
+                </ul>
+            </div>
+            <div ng-show="roleId == 2">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li class="active"><a href="/profile"><i class="fa fa-tasks"></i> Profile</a></li>
+                    <li ><a href="/searchReports"><i class="fa fa-table"></i> Reports</a></li>
+                    <li><a href="/searchAlerts"><i class="fa fa-bell"></i> Alerts</a></li>
+                </ul>
+            </div>
+            <div ng-show="roleId == 3">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li><a href="/profile"><i class="fa fa-tasks"></i> Profile</a></li>
+                    <li><a href="/createReport"><i class="fa fa-table"></i> Reports</a></li>
+                    <li ><a href="/submitAlert"><i class="fa fa-bell"></i> Alerts</a></li>
+                    <li><a href="/checkIn"><i class="fa fa-list-ol"></i> Checkin</a></li>
+                </ul>   
+            </div>
+            <ul class="nav navbar-nav navbar-right navbar-user">                    
+                    <li><a href="/logout"><i class="fa fa-power-off"></i> Log Out</a></li>                       
+                </ul>
+          </div>  
+        </nav>
+        
+        <div class="alert alert-danger" ng-show='errorPanel'>
+        	<span class="glyphicon glyphicon-exclamation-sign"></span>
+        	Error: {{errorMsg}}
+    	</div>    	
+    	    	
+        <div class="alert alert-success" ng-show='successPanel'>
+        	<span class="glyphicon glyphicon-exclamation-sign"></span>
+        	Info: {{successMsg}}
+    	</div> 
+        
+        <div class="modal-body row" id="searchBuildings"> 
+        	<div class="col-md-7">         	              
+				<div class="form-group input-group">			  						
+                    <input type="text" class="form-control" ng-model='searchString' placeholder="Enter building name">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" type="button" ng-click='startSearch()'><i class="fa fa-search"></i></button>
+                    </span>
+                </div>
+            </div>
+            
+            <div class="col-md-7">                 			
+				<div class="form-group" ng-show="resultsExist">									
+					<label>Select building from the list of search results</label>
+					<select class="form-control" ng-model="selectedBuilding" ng-change="selectionChanged()" ng-options="building.buildingName for building in buildings"></select>												
+				</div>
+				<div class="form-group" ng-show="resultsNotExist">
+					<div class="col-md-8">
+						<p class="form-control-static">No matches in buildings for the given search string!</p>
+					</div>
+				</div>								
+			</div>		
+							 		
+  			<div class="col-md-9" ng-show="checkpointsExist">        	  				
+  				<div class="content">  					
+  					<form class="form-horizontal">  					
+  						<fieldset>        													
+							<div class="form-group">
+								<label for="checkpoints" class="col-md-6">
+									<h2>Check points:</h2>
+								</label>		
+							</div>
+							<div class="form-group">						
+								<div class="col-md-10">
+									<table st-table="rowCollection" class="table table-striped">
+										<thead>
+										<tr>
+											<th class="col-md-2">S No.</th>
+											<th>Latitude</th>
+											<th>Longitude</th>
+											<th>Checkpoint Name</th>
+											<th class="col-md-5">Guard assigned</th>																					
+										</tr>
+										</thead>
+										<tbody>
+										<tr ng-repeat="(i, checkpoint) in checkpoints track by $index">
+											<td>{{i+1}}</td>
+											<td>{{checkpoint.latitude}}</td>
+											<td>{{checkpoint.longitude}}</td>
+											<td>{{checkpoint.cName}}</td>
+											<td><select class="form-control" ng-init="selectedGuard[$index].selectedGuardId=checkpoint.guardId" ng-model="selectedGuard[$index].selectedGuardId" ng-options="guard.guardId as guard.guardName for guard in guards"></td>																			
+											<td><button type="button" class="btn btn-link" ng-disabled="!checkpoint.guardId" ng-click="unassignGuard($index)">Unassign guard</button></td>																					
+										</tr>
+										</tbody>
+									</table> 
+									<button type="submit" class="btn btn-primary" ng-click="saveChanges()">
+					                    Save changes
+					                </button> 
+								</div>
+							</div>																
+						</fieldset>
+					</form>
+				</div>
+			</div>					
+      	</div>        	    
+  	</div>      	  	   
+</body>
+</html>

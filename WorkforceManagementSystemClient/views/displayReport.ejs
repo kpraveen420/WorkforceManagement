@@ -1,0 +1,321 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workforce Management System</title>
+
+    <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/css/local.css" />
+
+    <script type="text/javascript" src="/stylesheets/js/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="/stylesheets/bootstrap/js/bootstrap.min.js"></script>   
+    
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>    
+	
+	<script>
+function workforce($scope,$http,$location){
+    	 $scope.roleId = <%- JSON.stringify(roleId) %>;
+    	 
+    	  
+    	  var buildingId=sessionStorage.buildingId;
+    	  var createTime=sessionStorage.creationTime;
+    	  
+    	$http({
+			method: 'GET',
+			url: '/showReport',
+			data:{"buildingId":buildingId,"createTime":createTime}
+		}).success(function(response){
+			if(response.status == "success") {
+			//alert(JSON.stringify(response));
+			$scope.errorPanel=false;
+			$scope.maintenanceVal=false;
+			$scope.parkingVal=false;
+			$scope.incidentsVal=false;
+			$scope.serviceVal=false;
+			$scope.dateVal=false;
+			$scope.checkinError=false;
+			if(response.Rcode==200){
+			//$scope.reportDetailsShow=false;
+			$scope.buildingName=response.reportDetails[0].buildingName;
+			$scope.creationTime=response.reportDetails[0].creationTime;
+			$scope.guardName=response.reportDetails;
+			}
+			else{
+			$scope.dateVal=true;
+				$scope.buildingName="No Details Available for Selected Building";
+				$scope.creationTime1="No Details Available for Selected Building";
+				$scope.name="No Details Available for Selected Building";
+			}
+			if(response.Mcode==200){
+			$scope.maintenance=response.maintenance;
+			}
+			else{
+				$scope.maintenanceVal=true;
+	      	    $scope.maintenance1 ="No Data Available to display"}
+	        if(response.Pcode==200){
+			$scope.parking=response.parking;
+			}
+			else{
+			$scope.parkingVal=true;
+	        $scope.parking1 ="No Data Available to display"}
+	        if(response.Scode==200){
+			$scope.servicecalls=response.servicecalls;
+			}
+			else{
+			$scope.serviceVal=true;
+	        $scope.service ="No Data Available to display"}
+	        if(response.Icode==200){
+			$scope.incidents=response.incidents;
+			}
+			else{
+				$scope.incidentsVal=true;
+	        $scope.incidents1 ="No Data Available to display"}
+			if(response.Ccode==200){			
+			$scope.checkindata=response.checkindata;
+			}
+			else{
+			//alert("Hi2");
+			$scope.checkinError=true;
+	        $scope.checkinMessage ="No Checkins made";}
+			}
+			 else if(res.errorCodeNo===500){
+                window.location = 'index';
+            } else if(res.status === 'Failed'){
+                if(res.errorCodeNo!==undefined && res.errorCodeNo === '500'){
+                    window.location = '/';
+                }
+            }
+			else {
+				if(response.Status=="Error"){
+			alert("Hi in error");
+			$scope.errorPanel=true;
+			$scope.maintenanceVal=false;
+			$scope.parkingVal=false;
+			$scope.incidentsVal=false;
+			$scope.serviceVal=false;
+			$scope.dateVal=false;
+				$scope.errorMsg ="No Data Available to display";
+				$scope.buildingName="No Details Available for Selected Building";
+				$scope.creationTime1="No Data Available to display";
+			    $scope.maintenance1 ="No Data Available to display";
+			    $scope.parking1="No Data Available to display";
+			    $scope.incidents1="No Data Available to display";
+			    $scope.service="No Data Available to display";
+			
+			}}
+		}).error(function(error){
+			alert("error");
+				$scope.errorMsg ="No Data Available to display";
+		});
+    	
+    	
+    	var showTable=false;//use it when required
+       	$scope.AdminValue=true;
+	   $scope.ClientValue=false;
+	   $scope.GuardValue=false; 
+ 	   }
+   
+  </script>
+	 
+</head>
+<body >
+ <div id="wrapper" ng-app="" ng-controller="workforce" >
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">                    
+        	<div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+               <div class="navbar-brand" >Work Force Management System</div>
+            </div>
+            <div class="collapse navbar-collapse navbar-ex1-collapse" >
+            <div ng-show="roleId == 1">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li><a href="/searchClients"><i class="fa fa-tasks"></i> Clients</a></li>
+                    <li><a href="/searchGuards"><i class="fa fa-tasks"></i> Guards</a></li>
+                    <li class="active"><a href="/searchReports"><i class="fa fa-table"></i> Reports</a></li>
+                    <li><a href="/searchAlerts"><i class="fa fa-bell"></i> Alerts</a></li>                    
+                    <li><a href="/searchBuildings"><i class="fa fa-list-ol"></i> Schedule</a></li>                    
+                </ul>
+            </div>
+            <div ng-show="roleId == 2">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li><a href="/profile"><i class="fa fa-tasks"></i> Profile</a></li>
+                    <li class="active"><a href="/searchReports"><i class="fa fa-table"></i> Reports</a></li>
+                    <li><a href="/searchAlerts"><i class="fa fa-bell"></i> Alerts</a></li>
+                </ul>
+            </div>
+            <div ng-show="roleId == 3">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li><a href="/profile"><i class="fa fa-tasks"></i> Profile</a></li>
+                    <li class="active"><a href="/createReport"><i class="fa fa-table"></i> Reports</a></li>
+                    <li><a href="/submitAlert"><i class="fa fa-bell"></i> Alerts</a></li>
+                    <li><a href="/checkIn"><i class="fa fa-list-ol"></i> Checkin</a></li>
+                </ul>   
+            </div>
+            <ul class="nav navbar-nav navbar-right navbar-user">                    
+                    <li><a href="/logout"><i class="fa fa-power-off"></i> Log Out</a></li>                       
+                </ul>
+          </div>  
+        </nav>
+            
+         <div class="alert alert-danger" ng-show="errorPanel">
+  			<span class="glyphicon glyphicon-exclamation-sign"></span>
+  			Error: {{checkinMsg}}{{errorMsg}}
+		</div>
+<div id="page-wrapper">
+ <div class="row">
+          <div class="col-lg-12">
+            <h1 id="buttons" class="page-header" align="center">Report Details</h1>
+          </div>
+        </div>
+        <div class="col-lg-12">
+ <div class="col-lg-4">
+            <div class="panel panel-primary">
+              <div class="panel-heading">
+                <h3 class="panel-title">Property Name</h3>
+              </div>
+              <div class="panel-body">
+              {{buildingName}}
+              </div>
+            </div>
+</div>  
+<div class="col-lg-4">
+            <div class="panel panel-primary">
+              <div class="panel-heading">
+                <h3 class="panel-title">Date</h3>
+              </div>
+              <div class="panel-body"  ng-show="!dateVal">
+               {{creationTime}}     
+              </div>
+              <p ng-show="dateVal">
+               <br>{{creationTime1}}
+              </p>
+            </div>
+</div> 
+<div class="col-lg-4">
+            <div class="panel panel-primary">
+              <div class="panel-heading">
+                <h3 class="panel-title">Security Officer Name</h3>
+              </div>
+              <div class="panel-body" ng-repeat="mod1 in guardName" >
+                {{mod1.firstName}}&nbsp&nbsp{{mod1.lastName}}
+              </div>
+             <p ng-show!="dateVal">
+             <br> {{name}}
+              </p>
+            </div>  
+</div> </div>
+<div class="col-lg-12">
+            <div class="panel panel-primary">
+              <div class="panel-heading">
+                <h3 class="panel-title">Activity Checklist</h3>
+              </div>
+              <div class="panel-body">
+            		 <table style="width:50%" class="table table-stripped" ng-show="!checkinError" >
+				    <tr ng-show="checkinError">
+				      <td>
+				      <h5 align="center" >  Sno</h4>
+				      </td>
+				      <td>
+				        <h5 align="center" > Patrol Schedule</h4>
+				      </td>
+				   </tr>
+				    <tr ng-repeat="mod1 in checkindata track by $index">
+				      <td>
+				        <p align="center">{{$index +1}}</p>
+				      </td>
+				      <td>
+				      <p align="center">{{mod1.checkinTime}}</p>
+				      </td>
+				   </tr>
+				  </table>  
+				  <p ng-show="checkinError">{{checkinMessage}}</p>
+              </div>
+            </div>
+</div>
+<div class="col-lg-12">
+            <div class="panel panel-warning">
+              <div class="panel-heading">
+                <h3 class="panel-title">Incident Reports </h3>
+              </div>
+              <div class="panel-body" ng-repeat="mod1 in incidents" ng-show="!incidentsVal">
+              {{mod1.description}}
+              </div>
+              <p ng-show="incidentsVal">
+              {{incidents1}}
+              </p>
+            </div>
+</div> 
+<div class="col-lg-12">
+            <div class="panel panel-warning">
+              <div class="panel-heading">
+                <h3 class="panel-title">Parking violations </h3>
+              </div>
+              <div class="panel-body" ng-repeat="mod1 in parking" ng-show="!parkingVal">
+              vehicle Number {{mod1.vehicleNumber}} violated in ParkingLot Number {{mod1.parkingLotNo}} at {{mod1.reportedTime}}
+              </div>
+             <p ng-show="parkingVal">
+              {{parking1}}
+                 </p>
+            </div>
+</div> 
+<div class="col-lg-12">
+            <div class="panel panel-warning">
+              <div class="panel-heading">
+                <h3 class="panel-title">Maintanence calls</h3>
+              </div>
+              <div class="panel-body" ng-repeat="mod1 in maintenance" ng-show="!maintenanceVal">
+          	 {{mod1.description}}
+              </div>
+               <p ng-show="maintenanceVal">
+          	 {{maintenance1}}
+              </p>
+            </div>
+</div> 
+ <div class="col-lg-12">
+            <div class="panel panel-warning">
+              <div class="panel-heading">
+                <h3 class="panel-title">Service Calls </h3>
+              </div> 
+              <div class="panel-body" ng-repeat="mod1 in servicecalls" ng-show="!serviceVal">
+              {{mod1.description}}
+              </div>
+               <p ng-show="serviceVal">
+              {{service}}
+              </p>
+            </div>
+</div>
+
+ <div class="col-lg-12">
+            <div class="panel panel-primary">
+              <div class="panel-heading">
+                <h3 class="panel-title">Patrol Details </h3>
+              </div>
+              <div class="panel-body">
+                <table class="table table-bordered"style="width:100%;height=:75%" ng-show="checkinError" ng-repeat="mod1 in checkindata">
+				    <tr>
+				      <td>
+				        <h3 class="panel-body">{{mod1.checkinTime}}</h3>
+				        <h4>Description</h4><br>
+				        <p>{{mod1.disposition}}</p>
+				      </td>
+				    </tr>
+				  </table>  
+             <p ng-show="checkinError">{{checkinMessage}}</p>
+              </div>
+            </div>
+</div>
+</div>
+</div>
+  </body>
+</html>

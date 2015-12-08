@@ -1,0 +1,1105 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workforce Management System</title>
+
+    <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/css/local.css" />
+
+    <script type="text/javascript" src="/stylesheets/js/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="/stylesheets/bootstrap/js/bootstrap.min.js"></script>   
+
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+	<!--<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>-->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script> 
+	 <script src="http://code.angularjs.org/1.2.9/angular.js"></script>
+</head>
+<body ng-app="myApp" ng-controller="buildingController">
+    <div id="wrapper">
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">                    
+        	<div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+               <div class="navbar-brand" >Work Force Management System</div>
+            </div>
+            <div class="collapse navbar-collapse navbar-ex1-collapse" >
+            <div ng-show="roleId == 1">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li class="active"><a href="/searchClients"><i class="fa fa-tasks"></i> Clients</a></li>
+                    <li><a href="/searchGuards"><i class="fa fa-tasks"></i> Guards</a></li>
+                    <li><a href="/searchReports"><i class="fa fa-table"></i> Reports</a></li>
+                    <li><a href="/searchAlerts"><i class="fa fa-bell"></i> Alerts</a></li>                    
+                    <li><a href="/searchBuildings"><i class="fa fa-list-ol"></i> Schedule</a></li>                    
+                </ul>
+            </div>
+            <div ng-show="roleId == 2">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li class="active"><a href="/profile"><i class="fa fa-tasks"></i> Profile</a></li>
+                    <li ><a href="/searchReports"><i class="fa fa-table"></i> Reports</a></li>
+                    <li><a href="/searchAlerts"><i class="fa fa-bell"></i> Alerts</a></li>
+                </ul>
+            </div>
+            <div ng-show="roleId == 3">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li><a href="/profile"><i class="fa fa-tasks"></i> Profile</a></li>
+                    <li><a href="/createReport"><i class="fa fa-table"></i> Reports</a></li>
+                    <li><a href="/submitAlert"><i class="fa fa-bell"></i> Alerts</a></li>
+                    <li><a href="/checkIn"><i class="fa fa-list-ol"></i> Checkin</a></li>
+                </ul>   
+            </div>
+            <ul class="nav navbar-nav navbar-right navbar-user">                    
+                    <li><a href="/logout"><i class="fa fa-power-off"></i> Log Out</a></li>                       
+                </ul>
+          </div>  
+        </nav>
+        <div class="alert alert-danger" ng-show="errorPanel">
+  			<span class="glyphicon glyphicon-exclamation-sign"></span>
+  			Error: {{errorMsg}}
+		</div>
+
+<div class="modal-body row" id="buildingDetails" ng-show="displayMode">	
+  			<div class="row text-center">
+  					<h2>Building Details</h2>
+			</div>	
+  			<div class="col-md-10 container">        	  				
+  				<div class="content">
+  					<form class="form-horizontal">  					
+  						<fieldset>
+  							<div class="form-group">      
+      							<label class="col-md-2">Client Name:</label>
+					            <p class="col-md-6">{{clientName}}</p>
+							</div>
+							<div class="form-group">      
+      							<label class="col-md-2">Building Name:</label>
+					            <p class="col-md-6">{{dispB.buildingName}}</p>
+							</div>
+    						<div class="form-group">      
+      							<label class="col-md-2">Address:</label>
+					            <p class="col-md-6">{{dispB.street}}, {{dispB.city}}, {{dispB.state}}, {{dispB.zipCode}}</p>
+							</div>
+							<div class="form-group">      
+      							<label class="col-md-2">Latitude:</label>
+					            <p class="col-md-6">{{dispB.bLatitude}}</p>
+							</div>
+							<div class="form-group">      
+      							<label class="col-md-2">Longitude:</label>
+					            <p class="col-md-6">{{dispB.bLongitude}}</p>
+							</div>
+							<div class="form-group">      
+      							<label class="col-md-2">Fixed Amount:</label>
+					            <p class="col-md-6">${{dispB.fixedAmount}}</p>
+							</div>
+							<div class="form-group">      
+      							<label class="col-md-2">Release Date:</label>
+					            <p class="col-md-6">{{dispB.releaseDate}}</p>
+							</div>			
+						</fieldset>
+					</form>
+				</div>
+			</div>
+			<div class="col-md-2">				
+				<button type="button" class="btn btn-primary" ng-click="switchToEdit()" ng-show="admin">Edit Building</button>
+                <p>
+                <p>
+                <button type="button" class="btn btn-danger" ng-click="deleteBuilding()" ng-show="admin">Delete Building</button>
+			</div>
+			<div class="col-lg-7">
+				<div id="map-canvas1" style="width:100%;height:75%;"></div>
+			</div>
+			<div class="col-lg-5">
+			<div class="form-group">      
+      			<h4><b>Checkin Points:</b></h4>
+      		</div>
+			<table class="table table-striped">
+				<tr>
+					<th>CP Name</th>
+					<th>Latitude</th>
+					<th>Longitude</th>
+				</tr>
+				<tr ng-repeat="cp in cpArr1">
+					<td>{{cp.cName}}</td>
+					<td>{{cp.latitude}}</td>
+					<td>{{cp.longitude}}</td>
+				</tr>
+			</table>
+			</div>
+			
+</div>
+
+
+<div class="modal-body row" id="buildingEdit" ng-show="editMode">	
+  			<div class="row text-center">
+  					<h2>Edit Building Details</h2>
+			</div>
+  			<div class="col-md-12 container">
+  				<div class="content">  					
+  					<form class="form-horizontal" name="editForm" ng-submit="saveBDetails()" novalidate>
+  						<fieldset>    
+    						<div class="form-group">      
+      							<label class="col-md-2">Client Name:</label>
+					            <p class="col-md-6">{{clientName}}</p>
+							</div>
+							<div class="form-group">      
+      							<label class="col-md-2">Building Name:</label>
+					            <div class="col-md-6">
+					                <input type="text" required name="bName" class="form-control" ng-model="editB.buildingName" placeholder="Enter building name">
+    								<span style="color:red" ng-show="editForm.bName.$error.required">Building Name is mandatory!</span>
+					            </div>
+							</div>
+							<div class="form-group">      
+      							<label class="col-md-2">Street:</label>
+					            <div class="col-md-6">
+					                <input type="text" required name="str" class="form-control" ng-model="editB.street" placeholder="Enter street and Apt no.">
+    								<span style="color:red" ng-show="editForm.str.$error.required">Street is mandatory!</span>
+					            </div>
+							</div>
+							<div class="form-group">      
+      							<label class="col-md-2">City:</label>
+					            <div class="col-md-6">
+					                <input type="text" required name="ct" class="form-control" ng-model="editB.city" placeholder="Enter city">
+    								<span style="color:red" ng-show="editForm.ct.$error.required">City is mandatory!</span>
+					            </div>
+							</div>
+							<div class="form-group">      
+      							<label class="col-md-2">State:</label>
+					            <div class="col-md-6">
+					                <input type="text" required name="st" class="form-control" ng-model="editB.state" placeholder="Enter state">
+    								<span style="color:red" ng-show="editForm.st.$error.required">State is mandatory!</span>
+					            </div>
+							</div>
+							<div class="form-group">      
+      							<label class="col-md-2">Zip Code:</label>
+					            <div class="col-md-6">
+					                <input type="text" name="zip" ng-pattern="/(^\d{5}$)|(^\d{5}-\d{4}$)/" required class="form-control" ng-model="editB.zipCode" placeholder="Enter zip code">
+					                <span style="color:red" ng-show="editForm.zip.$error.pattern">Not a valid Zip Code!</span>
+    								<span style="color:red" ng-show="editForm.zip.$error.required">Zip Code is mandatory!</span>
+					            </div>
+					            <input type="button" class="btn btn-info" ng-click="generateLatLng()" value="Generate">
+							</div>
+							<div class="form-group">      
+      							<label class="col-md-2">Latitude:</label>
+					            <p class="col-md-6">{{editB.bLatitude}}</p>
+							</div>
+							<div class="form-group">      
+      							<label class="col-md-2">Longitude:</label>
+					            <p class="col-md-6">{{editB.bLongitude}}</p>
+							</div>
+							<div class="form-group">
+      							<label class="col-md-2">Fixed Amount:</label>
+      							<div class = "col-md-6"><div class="input-group">
+					            	<span class="input-group-addon">$</span>
+  									<input type="number" ng-pattern="/^\d{1,}?$/" name="amt" required class="form-control" ng-model="editB.fixedAmount" placeholder="Enter amount without decimals">
+								</div>
+									<span style="color:red" ng-show="editForm.amt.$error.pattern">Invalid Amount!</span>
+    								<span style="color:red" ng-show="editForm.amt.$error.required">Fixed Amount is mandatory!</span>
+    							</div>
+							</div>
+							<div class="form-group">
+      							<label class="col-md-2">Release Date:</label>
+					            <div class="col-md-6">
+					                <input type="date" required name="relDate" class="form-control" ng-model="editB.releaseDate" placeholder="Enter release date">
+					                <span style="color:red" ng-show="editForm.relDate.$error.date">Not a valid date!</span>
+    								<span style="color:red" ng-show="editForm.relDate.$error.required">Release Date is mandatory!</span>
+					            </div>
+							</div>												
+						</fieldset>
+						<br>
+						<div class="row text-center">
+			                <input type="submit" class="btn btn-info" value="Save changes">
+			                <input type="button" class="btn btn-warning" ng-click="cancel()" value="Cancel">
+			            </div>
+					</form>
+					</div>
+			<hr/>
+			<hr/>
+			</div>
+      		<div class="row text-center"><h2>Edit Checkin Points</h2></div>
+      		<br>
+      	
+			<div class="col-lg-6">
+				<div id="map-canvas2" style="width:100%;height:75%;"></div>
+			</div>
+			<div class="col-lg-6">
+			<div class="well">
+			<table class="table-striped table-condensed cf" >
+				<tr>
+					<th ng-show="false">Id</th>
+					<th>CP Name</th>
+					<th>Latitude</th>
+					<th>Longitude</th>
+					<th>Delete</th>
+          			<th>Save</th>
+				</tr>
+				<tr ng-repeat="cp in cpArr2">
+					<td ng-show="false">{{cp.checkinId}}</td>
+          			<td><input type="text" class="form-control" ng-model="cp.cName"></td>
+					<td>{{cp.latitude}}</td>
+					<td>{{cp.longitude}}</td>
+					<td>
+          				<button type="button" ng-click="removeCP($index)" class="btn btn-sm btn-danger">
+						<i class="glyphicon glyphicon-remove-circle"></i>
+					</td>
+					<td>
+						<button type="button" ng-click="saveCP($index)" class="btn btn-sm btn-success">
+						<i class="glyphicon glyphicon-ok-circle"></i>
+          			</td>
+				</tr>
+			</table>
+			</div>
+			<form>
+			<div class="well">
+      				<label class="col-md-6">Checkin Point Name:</label>
+      				<div class="col-md-6">
+					<input type="text" class="form-control" ng-model="newCPName" placeholder="Enter checkin point name">
+					</div>
+					<br>
+				<br>
+				    
+      				<label class="col-md-6">Checkin Point Latitude:</label>
+      				<div class="col-md-6">
+					<input  type="text" class="form-control" id="newCPLat" placeholder="Click on map to get latitude">
+				</div>
+				<br>
+	    		<br>
+	    		<div class="form-group">
+      				<label class="col-md-6">Checkin Point Longitude:</label>
+      				<div class="col-md-6">
+					<input type="text" class="form-control" id="newCPLng" placeholder="Click on map to get longitude">
+				</div>
+			</div>
+			<br>
+			</div>
+				<center>
+					<button class="btn btn-info" ng-click="addNewCP()">Add</button>
+			    </center>
+			</form>
+		</div>
+		<div class="row text-center col-lg-12">
+			<br>
+			<button class="btn btn-info" ng-click="done()">Done</button>
+		</div>
+</div>
+
+
+<div class="modal-body row" id="buildingCreate" ng-show="createMode">
+  			<div class="row text-center">
+  					<h2>Create Building</h2>
+			</div>
+  			<div class="col-md-12 container">
+  				<div class="content">  					
+  					<form class="form-horizontal" name="createForm" ng-submit="createB()" novalidate>
+  						<fieldset>    
+    						<div class="form-group">      
+      							<label class="col-md-2">Client Name:</label>
+					            <p class="col-md-6">{{clientName}}</p>
+							</div>
+							<div class="form-group">      
+      							<label class="col-md-2">Building Name:</label>
+					            <div class="col-md-6">
+					                <input type="text" required name="bName" class="form-control" ng-model="createB.buildingName" placeholder="Enter building name">
+    								<span style="color:red" ng-show="submitted && createForm.bName.$error.required">Building Name is mandatory!</span>
+					            </div>
+							</div>
+							<div class="form-group">      
+      							<label class="col-md-2">Street:</label>
+					            <div class="col-md-6">
+					                <input type="text" required name="str" class="form-control" ng-model="createB.street" placeholder="Enter street and Apt no.">
+    								<span style="color:red" ng-show="submitted && createForm.str.$error.required">Street is mandatory!</span>
+					            </div>
+							</div>
+							<div class="form-group">      
+      							<label class="col-md-2">City:</label>
+					            <div class="col-md-6">
+					                <input type="text" required name="ct" class="form-control" ng-model="createB.city" placeholder="Enter city">
+    								<span style="color:red" ng-show="submitted && createForm.ct.$error.required">City is mandatory!</span>
+					            </div>
+							</div>
+							<div class="form-group">      
+      							<label class="col-md-2">State:</label>
+					            <div class="col-md-6">
+					                <input type="text" required name="st" class="form-control" ng-model="createB.state" placeholder="Enter state">
+    								<span style="color:red" ng-show="submitted && createForm.st.$error.required">State is mandatory!</span>
+					            </div>
+							</div>
+							<div class="form-group">      
+      							<label class="col-md-2">Zip Code:</label>
+					            <div class="col-md-6">
+					                <input type="text" name="zip" ng-pattern="/(^\d{5}$)|(^\d{5}-\d{4}$)/" required class="form-control" ng-model="createB.zipCode" placeholder="Enter zip code">
+					                <span style="color:red" ng-show="submitted && createForm.zip.$error.pattern">Not a valid Zip Code!</span>
+    								<span style="color:red" ng-show="submitted && createForm.zip.$error.required">Zip Code is mandatory!</span>
+					            </div>
+					            <input type="button" class="btn btn-info" ng-click="generateCLatLng()" value="Generate">
+							</div>
+							<div class="form-group">      
+      							<label class="col-md-2">Latitude:</label>
+					            <p class="col-md-6">{{createB.bLatitude}}</p>
+							</div>
+							<div class="form-group">      
+      							<label class="col-md-2">Longitude:</label>
+					            <p class="col-md-6">{{createB.bLongitude}}</p>
+							</div>
+							<div class="form-group">
+      							<label class="col-md-2">Fixed Amount:</label>
+      							<div class = "col-md-6"><div class="input-group">
+					            	<span class="input-group-addon">$</span>
+  									<input type="number" ng-pattern="/^\d{1,}?$/" name="amt" required class="form-control" ng-model="createB.fixedAmount" placeholder="Enter amount without decimals">
+								</div>
+									<span style="color:red" ng-show="submitted && createForm.amt.$error.pattern">Invalid Amount!</span>
+    								<span style="color:red" ng-show="submitted && createForm.amt.$error.required">Fixed Amount is mandatory!</span>
+    							</div>
+							</div>
+							<div class="form-group">
+      							<label class="col-md-2">Release Date:</label>
+					            <div class="col-md-6">
+					                <input type="date" required name="relDate" class="form-control" ng-model="createB.releaseDate" placeholder="Enter release date">
+					                <span style="color:red" ng-show="submitted && createForm.relDate.$error.date">Not a valid date!</span>
+    								<span style="color:red" ng-show="submitted && createForm.relDate.$error.required">Release Date is mandatory!</span>
+					            </div>
+							</div>												
+						</fieldset>
+						<br>
+						<div class="row text-center">
+			                <input type="submit" class="btn btn-info" value="Create" ng-click="submitted = true">
+			                <input type="button" class="btn btn-warning" ng-click="cCancel()" value="Cancel">
+			            </div>
+					</form>
+					</div>
+			</div>
+</div>	
+<div class="modal-body row" id="cpCreate" ng-show="createMap">
+      		<div class="row text-center"><h2>Create Checkin Points</h2></div>
+      		<br>
+      		
+			<div class="col-lg-6">
+				<div id="map-canvas3" style="width:100%;height:75%;"></div>
+			</div>
+			<div class="col-lg-6">
+			<div class="well">
+			<table class="table-striped table-condensed cf" >
+				<tr>
+					<th ng-show="false">Id</th>
+					<th>CP Name</th>
+					<th>Latitude</th>
+					<th>Longitude</th>
+					<th>Delete</th>
+          			<th>Save</th>
+				</tr>
+				<tr ng-repeat="cp in cpArr3">
+					<td ng-show="false">{{cp.checkinId}}</td>
+          			<td><input type="text" class="form-control" ng-model="cp.cName"></td>
+					<td>{{cp.latitude}}</td>
+					<td>{{cp.longitude}}</td>
+					<td>
+          				<button type="button" ng-click="cRemoveCP($index)" class="btn btn-sm btn-danger">
+						<i class="glyphicon glyphicon-remove-circle"></i>
+					</td>
+					<td>
+						<button type="button" ng-click="cSaveCP($index)" class="btn btn-sm btn-success">
+						<i class="glyphicon glyphicon-ok-circle"></i>
+          			</td>
+				</tr>
+			</table>
+			</div>
+			<form>
+			<div class="well">
+      				<label class="col-md-6">Checkin Point Name:</label>
+      				<div class="col-md-6">
+					<input type="text" class="form-control" ng-model="cNewCPName" placeholder="Enter checkin point name">
+					</div>
+					<br>
+				<br>
+				    
+      				<label class="col-md-6">Checkin Point Latitude:</label>
+      				<div class="col-md-6">
+					<input  type="text" class="form-control" id="cNewCPLat" placeholder="Click on map to get latitude">
+				</div>
+				<br>
+	    		<br>
+	    		<div class="form-group">
+      				<label class="col-md-6">Checkin Point Longitude:</label>
+      				<div class="col-md-6">
+					<input type="text" class="form-control" id="cNewCPLng" placeholder="Click on map to get longitude">
+				</div>
+			</div>
+			<br>
+			</div>
+				<center>
+					<button class="btn btn-info" ng-click="cAddNewCP()">Add</button>
+			    </center>
+			</form>
+		</div>
+		<div class="row text-center col-lg-12">
+			<br>
+			<button class="btn btn-info" ng-click="done()">Done</button>
+		</div>
+</div>
+
+
+	</div>
+  	<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=false"></script>
+<script>
+var app = angular.module('myApp', []);
+//role - client - required only for displaying building details, no edit or delete or add
+//admin - full access
+//guard nothing
+//Add Building - client id, client name, add functionality
+//Building details - client name, building id, details func
+function buildingController($scope,$http,$location) {
+	$scope.roleId = <%- JSON.stringify(roleId) %>;
+	$scope.errorPanel = false;
+	var displayScreen = sessionStorage.displayScreen;
+	var clientId = sessionStorage.clientId;
+	var clientName = sessionStorage.clientName;
+	var buildingId = sessionStorage.buildingId;
+	
+	if ($scope.roleId == '1') {
+		$scope.admin = true;
+	}
+	else if ($scope.roleId == '2') {
+		$scope.admin = false;
+	}
+	var bDetails = {};
+	var bDetails1 = {};
+	var createDetails = {};
+	var submitValidate = function(_form) {
+        for (field in _form) {
+            // look at each form input with a name attribute set
+            // checking if it is pristine and not a '$' special field
+            if (field[0] != '$' && _form[field].$pristine) {
+                // set it to the current model value (ie. leaving as is)
+                _form[field].$setViewValue(_form[field].$modelValue);
+            }
+        }   
+    };
+    
+    $scope.clientName = clientName;	//get clientid and clientname from session
+    
+	if (displayScreen == "Details") {
+		//var bDetails = {};
+		$scope.displayMode = true;
+		$scope.editMode = false;
+		$scope.createMode = false;
+		$scope.createMap = false;
+		//var buildingId = 1; //send from here through session are directly use it in api from session
+		$http({
+			method: 'POST',
+			url: '/buildingDetails',
+			data: {"buildingId": buildingId}
+		}).success(function(response){
+			if(response.status == 'Error'){
+				alert(response.errorMsg);
+			}
+			else if(response.status == 'Success'){
+				bDetails = response.results;
+				bDetails1 = JSON.parse(JSON.stringify(response.results));
+				display();
+			}
+		}).error(function(error){
+			alert("Something went wrong");
+		});
+	}
+	else if(displayScreen == "Create") {
+		$scope.createMode = true;
+		$scope.displayMode = false;
+		$scope.editMode = false;
+		$scope.createMap = false;
+	}
+	else {
+		alert("Invalid Display Screen");
+	}
+	
+	function display() {
+		$scope.editB = bDetails[0];
+		$scope.dispB = bDetails1[0];
+		/*$scope.buildingName = bDetails[0].buildingName;
+		$scope.street = bDetails[0].street;
+		$scope.city = bDetails[0].city;
+		$scope.state = bDetails[0].state;
+		$scope.zipCode = bDetails[0].zipCode;
+		$scope.fixedAmount = bDetails[0].fixedAmount;*/
+		//$scope.releaseDate = bDetails[0].releaseDate.split("T")[0];
+		/*$scope.bLat = bDetails[0].bLatitude;
+		$scope.bLng = bDetails[0].bLongitude;*/
+		$scope.cpArr1 = bDetails1;
+		$scope.cpArr2 = bDetails;
+		displayMap();
+	}
+
+		$scope.switchToEdit = function() {
+			$scope.displayMode = false;
+			$scope.editMode = true;
+			editMap();
+		};
+		//cancel and done, seperate ng-show based on session displayScreen
+		$scope.cancel = function() {
+			$scope.displayMode = true;
+			$scope.editMode = false;
+		};
+		$scope.done = function() {			
+			sessionStorage.displayScreen = "Details";
+			window.location = '/displayBuilding';
+		};
+		$scope.cCancel = function() {
+			window.location = '/searchClients';
+		};
+		$scope.generateLatLng = function() {
+			var bAddress = $scope.editB.buildingName +"," +$scope.editB.street +"," +$scope.editB.city +"," +$scope.editB.state +"," +$scope.editB.zipCode;
+			$http({
+				method: 'POST',
+				url: 'https://maps.googleapis.com/maps/api/geocode/json?address=' +bAddress
+			}).success(function(response){
+			if (response.status == "OK") {
+				$scope.editB.bLatitude = response.results[0].geometry.location.lat;
+				$scope.editB.bLongitude = response.results[0].geometry.location.lng;
+			}
+			else {
+				$scope.editB.bLatitude = "";
+				$scope.editB.bLongitude = "";
+				alert("Invalid Address");
+				$scope.errorPanel = true;
+				$scope.errorMsg = "Please enter a valid address";
+			}
+		}).error(function(error){
+			alert("Error");
+		});
+		};
+		
+		function displayMap() {
+			var bounds = new google.maps.LatLngBounds();
+			var mapOptions = {
+	    		//zoom: 20
+	    		//center:new google.maps.LatLng(0,0)
+	  		}
+	  		var map = new google.maps.Map(document.getElementById('map-canvas1'), mapOptions);
+	  		var image1 = '../images/cp.png';
+			var bLatLng = new google.maps.LatLng(bDetails1[0].bLatitude, bDetails1[0].bLongitude);
+			bounds.extend(bLatLng);
+  			var bMarker = new google.maps.Marker({
+      			position: bLatLng,
+      			map: map,
+      			title: bDetails1[0].buildingName
+  			});
+	  		for (var i = 0; i < $scope.cpArr1.length; i++) {
+				var lat = parseFloat($scope.cpArr1[i].latitude).toFixed(7);
+				var lng = parseFloat($scope.cpArr1[i].longitude).toFixed(7);
+				var cpLatLng = new google.maps.LatLng(lat, lng);
+				bounds.extend(cpLatLng);
+	  			var cpMarker = new google.maps.Marker({
+	      			position: cpLatLng,
+	      			map: map,
+	      			title: $scope.cpArr1[i].cName,
+	      			icon:image1
+	  			});
+	  		}
+	  		map.fitBounds(bounds);
+	  		var boundsListener = google.maps.event.addListener((map), 'bounds_changed', function(event) {
+	        	//this.setZoom(2);
+	        	google.maps.event.removeListener(boundsListener);
+	    	});
+		};
+		//google.maps.event.addDomListener(window, 'load', displayMap);
+		
+		function editMap() {
+			var mapOptions = {
+    			//zoom: 20
+    			//center:new google.maps.LatLng(0,0)
+  			}
+			var map = new google.maps.Map(document.getElementById('map-canvas2'), mapOptions);
+			var bounds = new google.maps.LatLngBounds();
+				
+	  		var cpMarkers = [];
+			var bLatLng = new google.maps.LatLng(bDetails[0].bLatitude, bDetails[0].bLongitude);
+			bounds.extend(bLatLng);
+  			var bMarker = new google.maps.Marker({
+      			position: bLatLng,
+      			map: map,
+      			title: bDetails[0].buildingName
+  			});
+  			var cpImage = '../images/cp.png';
+  			dispCPMarkers();
+	  		map.fitBounds(bounds);
+	  		var boundsListener = google.maps.event.addListener((map), 'bounds_changed', function(event) {
+	        	//this.setZoom(2);
+	        	google.maps.event.removeListener(boundsListener);
+	    	});
+	    	
+	    	var newCPMarker = new google.maps.Marker({});
+        	google.maps.event.addListener(map, "click", function(event) {
+				newCPMarker.setMap(null);
+				newLat = event.latLng.lat().toFixed(7);
+				newLng = event.latLng.lng().toFixed(7);
+            	document.getElementById("newCPLat").value = newLat;
+            	document.getElementById("newCPLng").value = newLng;
+              	newCPMarker = new google.maps.Marker({
+                    position: new google.maps.LatLng(newLat,newLng),
+                    map: map,
+	      			icon: '../images/cp1.png'
+                 });
+        	});
+	    	
+			google.maps.event.addListener(map, "idle", function(){
+				center = map.getCenter();
+				google.maps.event.trigger(map, 'resize');
+				map.setCenter(center);
+			});
+			
+			$scope.addNewCP = function() {
+				if ($scope.newCPName == undefined || $scope.newCPName == "") {
+					//display error
+					alert("Please enter Checkin Point name");
+				}
+				else if(document.getElementById("newCPLat").value == "" || document.getElementById("newCPLng").value == "") {
+					//display error
+					alert("Click on the map to get Latitude and Longitude values");
+				}
+				else {
+					var tempLat = parseFloat(document.getElementById("newCPLat").value).toFixed(7);
+					var tempLng = parseFloat(document.getElementById("newCPLng").value).toFixed(7);
+					var tempName = $scope.newCPName;
+					var boolFound = false;
+					for (var i = 0; i < $scope.cpArr2.length; i++) {
+						if(tempName == $scope.cpArr2[i].cName || (tempLat == $scope.cpArr2[i].latitude && tempLng == $scope.cpArr2[i].longitude)) {
+							//display error
+							alert("Checkin Point already exists");
+							boolFound = true;
+							break;
+						}
+					}
+					if(!boolFound) {
+						$http({
+							method: 'POST',
+							url: '/createCP',
+							data: {"buildingId": buildingId,"latitude":tempLat,"longitude":tempLng,"cName":tempName}
+						}).success(function(response){
+							if(response.status == 'Error'){
+								alert("CP already exists");
+							}
+							else if(response.status == 'Success'){
+								alert("CP added");
+								var newCP = {
+									checkinId: response.checkinId,
+							        cName: tempName,
+							        latitude: tempLat,
+							        longitude: tempLng
+							    };
+							    $scope.cpArr2.push(newCP);
+							    newCPMarker.setMap(null);
+							    dispCPMarkers();
+							    $scope.newCPName = "";
+							    document.getElementById("newCPLat").value = "";
+							    document.getElementById("newCPLng").value = "";
+							}
+						}).error(function(error){
+							alert("Something went wrong" +error);
+						});						
+					}
+				}
+			};
+			
+			$scope.saveCP = function(index) {				
+				if ($scope.cpArr2[index].cName == undefined || $scope.cpArr2[index].cName == "") {
+					//display error
+					alert("Please enter Checkin Point name");
+				}
+				else {
+					var tempName = $scope.cpArr2[index].cName;
+					var boolFound = false;
+					for (var i = 0; i < $scope.cpArr2.length; i++) {
+						if(index != i && tempName == $scope.cpArr2[i].cName) {
+							//display error
+							alert("Checkin Point already exists");
+							boolFound = true;
+							break;
+						}
+					}
+					if(!boolFound) {
+						$http({
+							method: 'POST',
+							url: '/updateCP',
+							data: {"cName":tempName,"checkinId":$scope.cpArr2[index].checkinId}
+						}).success(function(response){
+							if(response.status == 'Error'){
+								alert("CP already exists");
+							}
+							else if(response.status == 'Success'){
+								alert("CP updated");
+								removeCPMarkers();
+							    newCPMarker.setMap(null);
+							    dispCPMarkers();
+							}
+						}).error(function(error){
+							alert("Something went wrong" +error);
+						});						
+					}
+				}
+				
+			};
+			
+			$scope.removeCP = function(index){
+				$http({
+				method: 'POST',
+				url: '/deleteCP',
+				data: {"checkinId": $scope.cpArr2[index].checkinId}
+				}).success(function(response){
+					if(response.status == 'Error'){
+						alert("Before deleting the checkin point, please unassign checkpoint from the guard");
+					}
+					else if(response.status == 'Success'){
+						alert("CP deleted");
+						$scope.cpArr2.splice(index, 1);
+				    	removeCPMarkers();
+				    	newCPMarker.setMap(null);
+				    	dispCPMarkers();
+					}
+				}).error(function(error){
+					alert("Something went wrong" +error);
+				});
+			};
+			
+			function removeCPMarkers() {
+				for (var i = 0; i < cpMarkers.length; i++) {
+					cpMarkers[i].setMap(null);
+			  	}
+			};
+			
+			function dispCPMarkers() {
+				for (var i = 0; i < $scope.cpArr2.length; i++) {
+					var lat = parseFloat($scope.cpArr2[i].latitude).toFixed(7);
+					var lng = parseFloat($scope.cpArr2[i].longitude).toFixed(7);
+					var cpLatLng = new google.maps.LatLng(lat, lng);
+					bounds.extend(cpLatLng);
+		  			var cpMarker = new google.maps.Marker({
+		      			position: cpLatLng,
+		      			map: map,
+		      			title: $scope.cpArr2[i].cName,
+		      			icon:cpImage
+		  			});
+		  			cpMarkers.push(cpMarker);
+		  		}
+			}
+		};
+		
+		$scope.deleteBuilding = function() {
+			$http({
+				method: 'POST',
+				url: '/deleteBuilding',
+				data: {"buildingId": buildingId}
+			}).success(function(response){
+				if(response.status == 'Error'){
+					alert("Before deleting the building, please unassign checkpoints of this building from all the guards");
+				}
+				else if(response.status == 'Success'){
+					alert("Building deleted");
+					//navigate back to client details screen
+				}
+			}).error(function(error){
+				alert("Something went wrong" +error);
+			});
+		};
+		
+		$scope.saveBDetails = function() {
+			submitValidate($scope.editForm);
+        	json1 = {"buildingName":bDetails1[0].buildingName,"street":bDetails1[0].street,"city":bDetails1[0].city,"state":bDetails1[0].state,"zipCode":bDetails1[0].zipCode,"bLatitude":bDetails1[0].bLatitude,"bLongitude":bDetails1[0].bLongitude,"fixedAmount":bDetails1[0].fixedAmount,"releaseDate":bDetails1[0].releaseDate};
+        	json2 = {"buildingName":$scope.editB.buildingName,"street":$scope.editB.street,"city":$scope.editB.city,"state":$scope.editB.state,"zipCode":$scope.editB.zipCode,"bLatitude":$scope.editB.bLatitude,"bLongitude":$scope.editB.bLongitude,"fixedAmount":$scope.editB.fixedAmount,"releaseDate":$scope.editB.releaseDate};
+        	if($scope.editForm.$valid && !(angular.equals(json1,json2))) {
+        		var bAddress = $scope.editB.buildingName +"," +$scope.editB.street +"," +$scope.editB.city +"," +$scope.editB.state +"," +$scope.editB.zipCode;
+				$http({
+					method: 'POST',
+					url: 'https://maps.googleapis.com/maps/api/geocode/json?address=' +bAddress
+				}).success(function(resp){
+					if (resp.status == "OK") {
+						var tempJson = {"buildingName":$scope.editB.buildingName,"street":$scope.editB.street,"city":$scope.editB.city,"state":$scope.editB.state,"zipCode":$scope.editB.zipCode,"bLatitude":resp.results[0].geometry.location.lat,"bLongitude":resp.results[0].geometry.location.lng,"fixedAmount":$scope.editB.fixedAmount,"releaseDate":$scope.editB.releaseDate};
+						$http({
+							method: 'POST',
+							url: '/updateBuilding',
+							data: {"buildingId": buildingId,"bDetails":tempJson}
+						}).success(function(response){
+							if(response.status == 'Error'){
+								alert("Invalid Data");
+							}
+							else if(response.status == 'Success'){
+								alert("Changes saved");
+								//refresh/load disp building
+							}
+						}).error(function(error){
+							alert("Something went wrong" +error);
+						});
+					}
+					else {
+						$scope.editB.bLatitude = "";
+						$scope.editB.bLongitude = "";
+						alert("Invalid Address");
+						$scope.errorPanel = true;
+						$scope.errorMsg = "Please enter a valid address";
+					}
+				}).error(function(error){
+					alert("Error");
+				});
+        	}
+        	else if(angular.equals(json1,json2)) {
+        		alert("No changes were made to save");
+        	}
+		};
+		
+		$scope.generateCLatLng = function() {
+			var bAddress = $scope.createB.buildingName +"," +$scope.createB.street +"," +$scope.createB.city +"," +$scope.createB.state +"," +$scope.createB.zipCode;
+			$http({
+				method: 'POST',
+				url: 'https://maps.googleapis.com/maps/api/geocode/json?address=' +bAddress
+			}).success(function(response){
+			if (response.status == "OK") {
+				$scope.createB.bLatitude = response.results[0].geometry.location.lat;
+				$scope.createB.bLongitude = response.results[0].geometry.location.lng;
+			}
+			else {
+				$scope.createB.bLatitude = "";
+				$scope.createB.bLongitude = "";
+				alert("Invalid Address");
+				$scope.errorPanel = true;
+				$scope.errorMsg = "Please enter a valid address";
+			}
+		}).error(function(error){
+			alert("Error");
+		});
+		};
+		
+		function createMap() {
+			var mapOptions = {
+    			//zoom: 20
+    			//center:new google.maps.LatLng(0,0)
+  			}
+			var map = new google.maps.Map(document.getElementById('map-canvas3'), mapOptions);
+			var bounds = new google.maps.LatLngBounds();
+				
+	  		var cpMarkers1 = [];
+			var bLatLng = new google.maps.LatLng(createDetails.bLatitude, createDetails.bLongitude);
+			bounds.extend(bLatLng);
+  			var bMarker = new google.maps.Marker({
+      			position: bLatLng,
+      			map: map,
+      			title: createDetails.buildingName
+  			});
+  			var cpImage = '../images/cp.png';
+  			//cDispCPMarkers();
+	  		map.fitBounds(bounds);
+	  		var boundsListener = google.maps.event.addListener((map), 'bounds_changed', function(event) {
+	        	//this.setZoom(2);
+	        	google.maps.event.removeListener(boundsListener);
+	    	});
+	    	
+	    	var newCPMarker = new google.maps.Marker({});
+        	google.maps.event.addListener(map, "click", function(event) {
+				newCPMarker.setMap(null);
+				newLat = event.latLng.lat().toFixed(7);
+				newLng = event.latLng.lng().toFixed(7);
+            	document.getElementById("cNewCPLat").value = newLat;
+            	document.getElementById("cNewCPLng").value = newLng;
+              	newCPMarker = new google.maps.Marker({
+                    position: new google.maps.LatLng(newLat,newLng),
+                    map: map,
+	      			icon: '../images/cp1.png'
+                 });
+        	});
+	    	
+			google.maps.event.addListener(map, "idle", function(){
+				center = map.getCenter();
+				google.maps.event.trigger(map, 'resize');
+				map.setCenter(center);
+			});
+			
+			$scope.cAddNewCP = function() {
+				if ($scope.cNewCPName == undefined || $scope.cNewCPName == "") {
+					//display error
+					alert("Please enter Checkin Point name");
+				}
+				else if(document.getElementById("cNewCPLat").value == "" || document.getElementById("cNewCPLng").value == "") {
+					//display error
+					alert("Click on the map to get Latitude and Longitude values");
+				}
+				else {
+					var tempLat = parseFloat(document.getElementById("cNewCPLat").value).toFixed(7);
+					var tempLng = parseFloat(document.getElementById("cNewCPLng").value).toFixed(7);
+					var tempName = $scope.cNewCPName;
+					var boolFound = false;
+					if ($scope.cpArr3.length !== undefined) {
+					for (var i = 0; i < $scope.cpArr3.length; i++) {
+						if(tempName == $scope.cpArr3[i].cName || (tempLat == $scope.cpArr3[i].latitude && tempLng == $scope.cpArr3[i].longitude)) {
+							//display error
+							alert("Checkin Point already exists");
+							boolFound = true;
+							break;
+						}
+					}}
+					if(!boolFound) {
+						$http({
+							method: 'POST',
+							url: '/createCP',
+							data: {"buildingId": createDetails.buildingId,"latitude":tempLat,"longitude":tempLng,"cName":tempName}
+						}).success(function(response){
+							if(response.status == 'Error'){
+								alert("CP already exists");
+							}
+							else if(response.status == 'Success'){
+								alert("CP added");
+								var newCP = {
+									checkinId: response.checkinId,
+							        cName: tempName,
+							        latitude: tempLat,
+							        longitude: tempLng
+							    };
+							    $scope.cpArr3.push(newCP);
+							    newCPMarker.setMap(null);
+							    cDispCPMarkers();
+							    $scope.cNewCPName = "";
+							    document.getElementById("cNewCPLat").value = "";
+							    document.getElementById("cNewCPLng").value = "";
+							}
+						}).error(function(error){
+							alert("Something went wrong" +error);
+						});						
+					}
+				}
+			};
+			
+			$scope.cSaveCP = function(index) {				
+				if ($scope.cpArr3[index].cName == undefined || $scope.cpArr3[index].cName == "") {
+					//display error
+					alert("Please enter Checkin Point name");
+				}
+				else {
+					var tempName = $scope.cpArr3[index].cName;
+					var boolFound = false;
+					for (var i = 0; i < $scope.cpArr3.length; i++) {
+						if(index != i && tempName == $scope.cpArr3[i].cName) {
+							//display error
+							alert("Checkin Point already exists");
+							boolFound = true;
+							break;
+						}
+					}
+					if(!boolFound) {
+						$http({
+							method: 'POST',
+							url: '/updateCP',
+							data: {"cName":tempName,"checkinId":$scope.cpArr3[index].checkinId}
+						}).success(function(response){
+							if(response.status == 'Error'){
+								alert("CP already exists");
+							}
+							else if(response.status == 'Success'){
+								alert("CP updated");
+								cRemoveCPMarkers();
+							    newCPMarker.setMap(null);
+							    cDispCPMarkers();
+							}
+						}).error(function(error){
+							alert("Something went wrong" +error);
+						});						
+					}
+				}
+				
+			};
+			
+			$scope.cRemoveCP = function(index){
+				$http({
+				method: 'POST',
+				url: '/deleteCP',
+				data: {"checkinId": $scope.cpArr3[index].checkinId}
+				}).success(function(response){
+					if(response.status == 'Error'){
+						alert("Before deleting the checkin point, please unassign checkpoint from the guard");
+					}
+					else if(response.status == 'Success'){
+						alert("CP deleted");
+						$scope.cpArr3.splice(index, 1);
+				    	cRemoveCPMarkers();
+				    	newCPMarker.setMap(null);
+				    	cDispCPMarkers();
+					}
+				}).error(function(error){
+					alert("Something went wrong" +error);
+				});
+			};
+			
+			function cRemoveCPMarkers() {
+				for (var i = 0; i < cpMarkers1.length; i++) {
+					cpMarkers1[i].setMap(null);
+			  	}
+			};
+			
+			function cDispCPMarkers() {
+				for (var i = 0; i < $scope.cpArr3.length; i++) {
+					var lat = parseFloat($scope.cpArr3[i].latitude).toFixed(7);
+					var lng = parseFloat($scope.cpArr3[i].longitude).toFixed(7);
+					var cpLatLng = new google.maps.LatLng(lat, lng);
+					bounds.extend(cpLatLng);
+		  			var cpMarker = new google.maps.Marker({
+		      			position: cpLatLng,
+		      			map: map,
+		      			title: $scope.cpArr3[i].cName,
+		      			icon:cpImage
+		  			});
+		  			cpMarkers1.push(cpMarker);
+		  		}
+			}
+		};
+		
+		$scope.createB = function() {
+			submitValidate($scope.createForm);
+        	if($scope.createForm.$valid) {
+        		var bAddress = $scope.createB.buildingName +"," +$scope.createB.street +"," +$scope.createB.city +"," +$scope.createB.state +"," +$scope.createB.zipCode;
+				$http({
+					method: 'POST',
+					url: 'https://maps.googleapis.com/maps/api/geocode/json?address=' +bAddress
+				}).success(function(resp){
+					if (resp.status == "OK") {
+						var tempJson = {"clientId":clientId,"buildingName":$scope.createB.buildingName,"street":$scope.createB.street,"city":$scope.createB.city,"state":$scope.createB.state,"zipCode":$scope.createB.zipCode,"bLatitude":resp.results[0].geometry.location.lat,"bLongitude":resp.results[0].geometry.location.lng,"fixedAmount":$scope.createB.fixedAmount,"releaseDate":$scope.createB.releaseDate};
+						$http({
+							method: 'POST',
+							url: '/createBuilding',
+							data: {"bDetails":tempJson}
+						}).success(function(response){
+							if(response.status == 'Error'){
+								alert("Building already exists");
+								$scope.errorPanel = true;
+								$scope.errorMsg = "Building already exists";
+							}
+							else if(response.status == 'Success'){
+								alert("Building Created");
+								$scope.createMap = true;
+								$scope.createMode = false;
+								//refresh/load disp building
+								createDetails = response.results;
+								$scope.cpArr3 = [];
+								createMap();
+							}
+						}).error(function(error){
+							alert("Something went wrong" +error);
+						});
+					}
+					else {
+						$scope.createB.bLatitude = "";
+						$scope.createB.bLongitude = "";
+						alert("Invalid Address");
+						$scope.errorPanel = true;
+						$scope.errorMsg = "Please enter a valid address";
+					}
+				}).error(function(error){
+					alert("Error");
+				});
+        	}
+		};
+}
+</script>
+</body>
+</html>

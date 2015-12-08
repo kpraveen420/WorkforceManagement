@@ -1,0 +1,244 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workforce Management System</title>
+
+    <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/css/local.css" />
+
+    <script type="text/javascript" src="/stylesheets/js/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="/stylesheets/bootstrap/js/bootstrap.min.js"></script>   
+    
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>    
+	
+	<script>
+function workforce1($scope,$http,$location){
+
+$scope.roleId = <%- JSON.stringify(roleId) %>;
+var submitValidate = function(_form) {
+        for (field in _form) {
+            // look at each form input with a name attribute set
+            // checking if it is pristine and not a '$' special field
+            if (field[0] != '$' && _form[field].$pristine) {
+                // set it to the current model value (ie. leaving as is)
+                _form[field].$setViewValue(_form[field].$modelValue);
+            }
+        }   
+    };
+	$scope.clear = function() {
+		 //$scope.firstName="";$scope.lastName="";$scope.buildingName="";$scope.email="";$scope.ssn="";
+		 //$scope.startDate1="";$scope.startDate2="";$scope.endDate2="";$scope.endDate1="";$scope.backgroundStatus="";
+		 window.location='/searchGuards';
+	};
+        
+$scope.Search = function() {
+			submitValidate($scope.info);
+			        if($scope.info.$valid){
+			$http({
+			method: 'POST',
+			url: '/searchingGuard',
+			data: {"firstName": $scope.firstName,"lastName": $scope.lastName,"buildingName":$scope.buildingName,"email":$scope.email,"ssn":$scope.ssn,"backgroundStatus":$scope.backgroundStatus,
+			"startDate1":$scope.startDate1,"endDate1":$scope.endDate1,"startDate2":$scope.startDate2,"endDate2":$scope.endDate2}
+		}).success(function(response){
+		//alert("Hi");
+		if(response.Status == 'Error'){
+		$scope.searchError=false;
+		//$scope.searchLoc=true;
+		$scope.searchErrorMsg =response.errorMsg;
+			//window.location='/searchGuard';
+		}		         
+		else if(response.Status == 'Success'){
+			$scope.searchError=true;
+			//alert(JSON.stringify(response));
+			$scope.myscope=response.results;
+			$scope.startDate1=null;$scope.endDate1=null;$scope.startDate2=null;$scope.endDate2=null;
+				// $scope.myscope = response;
+			}			
+		}).error(function(error){
+			$scope.errorPanel=true;
+			$scope.errorMsg ="Please Provide proper search Criteria";
+			alert("Please Provide proper search Criteria");
+		});
+		}}; 
+
+        
+
+// To display the GuardID
+ $scope.dispLink = function(name) {
+  		//alert(name);
+	};
+	$scope.AdminValue=true;
+   $scope.ClientValue=false;
+   $scope.GuardValue=false;
+    
+    
+    
+    $scope.createGuard = function() {
+    	window.location = "/createGuard";
+    };
+   
+   }
+   
+  </script>
+	  
+</head>
+<body >
+    <div id="wrapper" ng-app="" ng-controller="workforce1" >
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">                    
+        	<div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+               <div class="navbar-brand" >Work Force Management System</div>
+            </div>
+            <div class="collapse navbar-collapse navbar-ex1-collapse" >
+            <div ng-show="roleId == 1">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li><a href="/searchClients"><i class="fa fa-tasks"></i> Clients</a></li>
+                    <li class="active"><a href="/searchGuards"><i class="fa fa-tasks"></i> Guards</a></li>
+                    <li ><a href="/searchReports"><i class="fa fa-table"></i> Reports</a></li>
+                    <li ><a href="/searchAlerts"><i class="fa fa-bell"></i> Alerts</a></li>                    
+                    <li><a href="/searchBuildings"><i class="fa fa-list-ol"></i> Schedule</a></li>                    
+                </ul>
+            </div>
+            <div ng-show="roleId == 2">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li class="active"><a href="/profile"><i class="fa fa-tasks"></i> Profile</a></li>
+                    <li ><a href="/searchReports"><i class="fa fa-table"></i> Reports</a></li>
+                    <li ><a href="/searchAlerts"><i class="fa fa-bell"></i> Alerts</a></li>
+                </ul>
+            </div>
+            <div ng-show="roleId == 3">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li class="active"><a href="/profile"><i class="fa fa-tasks"></i> Profile</a></li>
+                    <li ><a href="/createReport"><i class="fa fa-table"></i> Reports</a></li>
+                    <li ><a href="/submitAlert"><i class="fa fa-bell"></i> Alerts</a></li>
+                    <li><a href="/checkIn"><i class="fa fa-list-ol"></i> Checkin</a></li>
+                </ul>   
+            </div>
+            <ul class="nav navbar-nav navbar-right navbar-user">                    
+                    <li><a href="/logout"><i class="fa fa-power-off"></i> Log Out</a></li>                       
+                </ul>
+          </div>  
+        </nav>
+        <div class="alert alert-danger" ng-show="errorPanel">
+  			<span class="glyphicon glyphicon-exclamation-sign"></span>
+  			Error: {{errorMsg}}
+		</div>
+<div id="page-wrapper">
+    <form class="form-horizontal" name="info">
+ <div class="row">
+          <div class="col-lg-12">
+            <h1 id="buttons" class="page-header" align="center">Search For Guard</h1>
+            <div class="col-md-4" style="float: right;">              
+                <button type="button" class="btn btn-primary" ng-click="createGuard()">
+                    Create Guard
+                </button>                
+            </div>
+          </div>
+        </div>
+  		 	<div>
+            <label for="firstname" class="col-md-2">
+                First Name:
+            </label>
+            <div class="col-md-5">
+                <input type="text" class="form-control" ng-model="firstName" placeholder="Search By First Name">
+            </div></div><br><br> 
+            <div>
+            <label for="firstname" class="col-md-2">
+                Last Name:
+            </label>
+            <div class="col-md-5">
+                <input type="text" class="form-control" ng-model="lastName" placeholder="Search By Last Name">
+            </div></div><br><br> 
+            <div>
+            <label for="firstname" class="col-md-2">
+                Building Name:
+            </label>
+            <div class="col-md-5">
+                <input type="text" class="form-control" ng-model="buildingName" placeholder="Search By Building Name">
+            </div></div><br><br>
+                        <div>
+            <label for="firstname" class="col-md-2">
+                Email ID:
+            </label>
+            <div class="col-md-5">
+                <input type="email" class="form-control" ng-model="email" placeholder="Search By Email ID">
+            </div></div><br><br>
+              <label for="firstname" class="col-md-2">
+                SSN:
+            </label>
+            <div class="col-md-5">
+                <input type="text" class="form-control" ng-model="ssn" placeholder="Search By SSN">
+            </div></div><br><br>
+              <label for="firstname" class="col-md-2">
+                Background Status:
+            </label>
+            <div class="form-group">
+            <div class="col-md-6">
+                            <label class="radio-inline">
+                                <input type="radio" ng-model="backgroundStatus" id="Completed" value="Completed" >
+                                Completed
+                            </label>
+                            <label class="radio-inline">
+                                <input type="radio" ng-model="backgroundStatus" id="Pending" value="Pending">
+                                Pending
+                            </label>
+                            <label class="radio-inline">
+                                <input type="radio" ng-model="backgroundStatus" id="inProgress" value="In Progress">
+                                In Progress
+                            </label></div>
+              </div><br>
+              <div class="col-md-12">
+              <label for="firstname" class="col-md-2"> Start Date Range </label>
+              <div class="col-md-3">
+              <input type="date" class="form-control" ng-model="startDate1"></div>
+              <div class="col-md-3">
+               <input type="date" class="form-control" ng-model="startDate2">
+  			  </div></div>
+  			   <br><br>
+  		 <div class="col-md-12">
+              <label for="firstname" class="col-md-2"> End Date Range </label>
+              <div class="col-md-3">
+              <input type="date" class="form-control" ng-model="endDate1" ></div>
+              <div class="col-md-3">
+               <input type="date" class="form-control" ng-model="endDate2">
+  			  </div>
+  		</div>
+  		<br><br><br><br><div class="col-md-4">   </div>   
+				<button type="submit" class="btn btn-info" ng-click="Search()">
+                    Search
+                </button>&nbsp&nbsp
+                <input type="button" class="btn btn-info" ng-click="clear()" value="Clear">
+                   </input><br><br>
+<div class="col-lg-12">
+            <div class="panel panel-primary">
+              <div class="panel-body">
+                     <table style="width:100%;height=:75%" ng-repeat="mod1 in myscope.guards track by mod1.guardId" ng-show="searchError">
+				    <tr>
+				      <td><br>
+				       <a href="./displayGuard/{{mod1.guardId}}" ng-click="dispLink(mod1.guardId)">{{mod1.firstName}}</a>
+				      </td>
+				    </tr>
+				  </table> 
+				<h4 ng-show="!searchError" align="center" ng-model="searchError" >{{searchErrorMsg}}</h4>             
+              </div>
+              
+            </div>          
+</div>
+  </form>
+</div>
+
+  </body>
+</html>

@@ -1,0 +1,234 @@
+'
+ƒ<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workforce Management System</title>
+
+    <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/css/local.css" />
+    <LINK rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.5.4/bootstrap-select.min.css">
+
+    <script type="text/javascript" src="/stylesheets/js/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="/stylesheets/bootstrap/js/bootstrap.min.js"></script>   
+    
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>  
+	   <script>
+        function guardConctroller($scope, $http){
+        	$scope.roleId = <%- JSON.stringify(roleId) %>;
+            $scope.buildingMode = true;
+            $scope.checkpointMode = false;
+            $scope.errorPanel=false;
+            // $scope.buildings = [{'id':'1', 'name':'praveen'},{'id':'2', 'name':'praveen k'}];
+
+            $scope.getBuildings = function(){
+                $http({
+                    method:'GET',
+                    url:'/getBuildings'
+                }).success(function(res){
+                    console.log(res);
+                    if(res.status === 'Failed'){
+                        alert(res.error);
+                        if(res.errorCodeNo!==undefined && res.errorCodeNo === '500'){
+                            window.location = '/';
+                        }
+                    } else if(res.status === 'Success'){
+                        $scope.buildings = res.buildings;
+                        // console.log($scope.buildings[0]);
+                    }
+                })
+            }
+var submitValidate = function(_form) {
+        for (field in _form) {
+            // look at each form input with a name attribute set
+            // checking if it is pristine and not a '$' special field
+            if (field[0] != '$' && _form[field].$pristine) {
+                // set it to the current model value (ie. leaving as is)
+                _form[field].$setViewValue(_form[field].$modelValue);
+            }
+        }   
+    };
+	$scope.clear = function() {
+		$scope.description="";$scope.checkpointId="";$scope.building="";
+		$scope.checkinTime='';$scope.checkinDate='';
+
+	};
+            $scope.getCheckpoints = function(build){
+                console.log(build);
+                $http({
+                    method:'GET',
+                    url:'/getCheckpoints/:'+build
+                    // params:{'buildingId':id}
+                }).success(function(res){
+                    console.log(res);
+                    if(res.status === 'Failed'){
+                        alert(res.error);
+                    } else if(res.status==='Success'){
+                        $scope.checkpointMode = true;
+                        $scope.checkPoints = res.checkPoints;
+                        console.log($scope.checkPoints);
+                    } else {
+                        console.log('Check response syntax. Something wrong with it..');
+                    }
+                
+                })
+            }
+
+            $scope.checkIn = function(){
+           // submitValidate($scope.info);
+			       //if($scope.info.$valid){
+                $http({
+                    method : "POST",
+                    url : "/checkIn",
+                    data : {"checkinId":$scope.checkpointId,"description":$scope.description,"checkinTime":$scope.checkinTime,"checkinDate":$scope.checkinDate}
+                }).success(function(res){
+
+			if(res.status=='Success'){
+					alert("Successfully Checked In");
+					window.location='/dashboard';
+					}
+					else if(res.status==='Date'){
+						$scope.errorPanel=true;
+			$scope.errorMsg =res.errorMsg;
+					}
+ else if(res.status === 'Failed'){
+                        alert(res.error);
+                        if(res.errorCodeNo!==undefined && res.errorCodeNo === '500'){
+                            window.location = '/';
+                        }}
+                })
+            //}
+};
+            $scope.getBuildings();
+        }
+
+    </script>
+</head>
+<body ng-app="" ng-controller="guardConctroller">
+    <div id="wrapper">
+   <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">                    
+        	<div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+               <div class="navbar-brand" >Work Force Management System</div>
+            </div>
+            <div class="collapse navbar-collapse navbar-ex1-collapse" >
+            <div ng-show="roleId == 1">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li><a href="/searchClients"><i class="fa fa-tasks"></i> Clients</a></li>
+                    <li><a href="/searchGuards"><i class="fa fa-tasks"></i> Guards</a></li>
+                    <li><a href="/searchReports"><i class="fa fa-table"></i> Reports</a></li>
+                    <li ><a href="/searchAlerts"><i class="fa fa-bell"></i> Alerts</a></li>                        
+                    <li><a href="/searchBuildings"><i class="fa fa-list-ol"></i> Schedule</a></li>                    
+                </ul>
+            </div>
+            <div ng-show="roleId == 2">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li><a href="/profile"><i class="fa fa-tasks"></i> Profile</a></li>
+                    <li><a href="/searchReports"><i class="fa fa-table"></i> Reports</a></li>
+                    <li><a href="/searchAlerts"><i class="fa fa-bell"></i> Alerts</a></li>
+                </ul>
+            </div>
+            <div ng-show="roleId == 3">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li><a href="/profile"><i class="fa fa-tasks"></i> Profile</a></li>
+                    <li><a href="/createReport"><i class="fa fa-table"></i> Reports</a></li>
+                    <li><a href="/submitAlert"><i class="fa fa-bell"></i> Alerts</a></li>
+                    <li class="active"><a href="/checkIn"><i class="fa fa-list-ol"></i> Checkin</a></li>
+                </ul>   
+            </div>
+            <ul class="nav navbar-nav navbar-right navbar-user">                    
+                    <li><a href="/logout"><i class="fa fa-power-off"></i> Log Out</a></li>                       
+                </ul>
+          </div>  
+        </nav>
+	    <div id="clientEdit"> 			
+  			<div class="row text-center">
+  					<h2>Guard CheckIn</h2>
+			</div>	
+			<form role="form">
+				<div ng-show='buildingMode'>
+					<!--div class="col-md-3">
+					</div-->
+					<div class="col-md-2">
+            			<label for="building">
+                			Building:
+            			</label>
+            		</div>
+            		<div class="col-md-9">
+                        <select name="selectedBuildingId" ng-model="building" ng-change="getCheckpoints(building)" class="form-control">
+
+                            <option ng:repeat="building in buildings" value="{{building.buildingId}}">{{building.buildingId}}-{{building.buildingName}}-{{building.street}}</option>
+                        </select>
+
+                		<!--select id="bulding" class="form-control">
+                    		<option>--Please Select One--</option>
+                    		<option ng-repeat="building in buildings">
+                		</select-->
+            		</div>
+            		<!--div class="col-md-4"> 
+            		</div-->            
+        		</div>	
+        		<div ng-show='checkpointMode'><br><br>
+					<!--div class="col-md-3">
+					</div>
+					<div class="col-md-2"-->
+            		<label for="checkpoints" class="col-md-2">
+                		CheckPoint:
+            		</label>
+            		<!--/div-->
+            		<div class="col-md-9">
+                        <select name="selectedCheckPointId" ng-model="checkpointId" class="form-control">
+                            <option>Please Select One</option>
+                            <option ng:repeat="checkpoint in checkPoints" value="{{checkpoint.checkinId}}">{{checkpoint.checkinId}}-{{checkpoint.cName}}</option>
+                        </select>
+            		</div>   
+            	</div>
+            	<div><br><br>
+            	<div class="form-group" >
+      							<label class="col-md-2">Checkin Date:</label>
+					            <div class="col-md-9">
+					                <input type="date" class="form-control" required ng-model="checkinDate" placeholder="Enter violation date" max="dateVal">
+					            </div>
+							</div><br>
+				<div class="form-group" >
+				 <label class="col-md-2">Checkin Time</label>
+				 <div class="col-md-9">
+   				<input type="time"  class="form-control" name="input" required ng-model="checkinTime" min="08:00" max="20:00"  />
+				</div></div><br>
+            		<div class="form-group">
+                		<label for="description" class="col-md-2">Description</label>
+                		<div class="col-md-9">
+                			<textarea required ng-model="description" class="form-control input-lg"></textarea>
+                		</div>
+            		</div>
+        		</div><br><br>
+            		<div class="row text-center">
+            		
+            		<button type="submit" class="btn btn-info" ng-click="checkIn()" ng-disabled="!checkpointId">
+			                    Submit CheckIn
+			         </button>
+			           &nbsp&nbsp
+                <input type="button" class="btn btn-info" ng-click="clear()" value="Clear">
+                   </input>
+        		</div>
+            </form>
+        </div>	
+    </div>
+  		
+</body>
+ 
+
+</html>

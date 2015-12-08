@@ -1,0 +1,449 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workforce Management System</title>
+
+    <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/css/local.css" />
+
+    <script type="text/javascript" src="/stylesheets/js/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="/stylesheets/bootstrap/js/bootstrap.min.js"></script>   
+    
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>     
+	
+	
+	<script>
+	var app = angular.module('myApp', []);  	
+		function guardController($scope,$http,$location) { 
+			$scope.errorPanel = false;
+			$scope.displayMode = false;
+			$scope.editMode = false;
+			
+			
+			var guardId  = <%- JSON.stringify(guardId) %>;	
+			$scope.roleId = <%- JSON.stringify(roleId) %>;
+			
+			$http({
+	            method: 'POST',
+	            url: '/getGuardDetails',
+	            data: { 'guardId' : guardId }	            	            
+	         }).success(function(result){	
+	         if(result.Status == 'Success')
+	         {
+	        	 backup = angular.copy(result.result.guardDetails);
+	        	 $scope.guardDetails = result.result.guardDetails;		        	 
+	            $scope.buildings = result.result.buildings;
+	            $scope.checkpoints = result.result.checkpoints;
+	            $scope.displayMode = true;
+	            $scope.errorPanel = false;	            	           
+	         } 	         	   
+	         else
+	         {
+	        	 $scope.displayMode = false;
+	            $scope.errorPanel = true;
+	            $scope.errorMsg = result.Status;
+	         }   	         	                                          
+	        }).error(function(error){
+	            $scope.displayMode = false;
+         		$scope.errorPanel = true;
+         		$scope.errorMsg = error;
+	        }); 								
+    		
+			$scope.switchToEdit = function() {		
+				$scope.errorPanel = false;
+				$scope.successPanel = false;		
+				$scope.displayMode = false;
+				$scope.editMode = true;				
+			}	
+			
+			$scope.deleteGuard = function() {
+				$scope.errorPanel = false;
+				$scope.successPanel = false;
+				$http({
+	            method: 'PUT',
+	            url: '/deleteGuard',
+	            data: { 'guardId' : guardId }	            	            
+	         }).success(function(result){	 
+                 	if(result.Status == 'Success')
+                 	{
+                 		$scope.displayMode = false;
+                 		$scope.successPanel = true;
+                 		$scope.successMsg = "Guard deleted succesfully!";
+                 	}
+                 	else
+                 	{
+                 		$scope.displayMode = false;
+                 		$scope.errorPanel = true;
+                 		$scope.errorMsg = result.Status;
+                 	}                 										
+	        }).error(function(error){
+	            $scope.displayMode = false;
+         		$scope.errorPanel = true;
+         		$scope.errorMsg = error;
+	        }); 				
+			}
+			
+			var submitValidate = function(_form) {				
+		        for (field in _form) {
+		            // look at each form input with a name attribute set
+		            // checking if it is pristine and not a '$' special field		            
+		            if (field[0] != '$' && _form[field].$pristine) {
+		                // set it to the current model value (ie. leaving as is)
+		                _form[field].$setViewValue(_form[field].$modelValue);
+		            }
+		        }   
+		    };
+			
+			$scope.saveChanges =  function() {				
+				$scope.errorPanel = false;
+				$scope.successPanel = false;
+				submitValidate($scope.editGuard);
+				if(!$scope.editGuard.$valid){					
+		            return;
+		        } 
+					
+				alert("valid");		
+				$http({
+	            method: 'PUT',
+	            url: '/updateGuardDetails',
+	            data: { 'guardId' : guardId , 'firstName' : $scope.guardDetails.firstName, 'lastName' : $scope.guardDetails.lastName, 'street' : $scope.guardDetails.street, 'city' : $scope.guardDetails.city, 'state' : $scope.guardDetails.state, 'zipcode' : $scope.guardDetails.zipcode, 'phoneNumber' :$scope.guardDetails.phoneNumber, 'userSSN' : $scope.guardDetails.userSSN, 'startDate' : $scope.guardDetails.startDate, 'endDate' : $scope.guardDetails.endDate }	            	            
+	         }).success(function(result){	 
+	        	 	if(result.Status == "Success")
+	        	 	{
+	        	 		$scope.displayMode = true;
+	        	 		$scope.editMode = false;    
+	        	 		window.location = '/displayGuard/'+guardId;	        	 		
+	        	 	}
+	        	 	else
+	        	 	{
+	        	 		$scope.errorPanel = true;
+	        	 		$scope.errorMsg = result.Status;
+        	 		}
+                 	
+					
+	        }).error(function(error){
+	            $scope.displayMode = false;
+         		$scope.errorPanel = true;
+         		$scope.errorMsg = error;
+	        }); 					
+			}
+			
+			$scope.resetChanges = function() {				
+				//alert(JSON.stringify(backup));
+				$scope.guardDetails = angular.copy(backup);
+			}
+			
+			$scope.cancel = function() {				
+				window.location = '/displayGuard/'+guardId;
+			}
+		
+		}    
+	</script>     
+	
+</head>
+<body >	
+    <div id="wrapper" ng-app="myApp" ng-controller="guardController">   
+    	<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">                    
+        	<div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+               <div class="navbar-brand" >Work Force Management System</div>
+            </div>
+            <div class="collapse navbar-collapse navbar-ex1-collapse" >
+            <div ng-show="roleId == 1">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li><a href="/searchClients"><i class="fa fa-tasks"></i> Clients</a></li>
+                    <li class="active"><a href="/searchGuards"><i class="fa fa-tasks"></i> Guards</a></li>
+                    <li><a href="/searchReports"><i class="fa fa-table"></i> Reports</a></li>
+                    <li><a href="/searchAlerts"><i class="fa fa-bell"></i> Alerts</a></li>                    
+                    <li><a href="/searchBuildings"><i class="fa fa-list-ol"></i> Schedule</a></li>                    
+                </ul>
+            </div>
+            <div ng-show="roleId == 2">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li><a href="/profile"><i class="fa fa-tasks"></i> Profile</a></li>
+                    <li ><a href="/searchReports"><i class="fa fa-table"></i> Reports</a></li>
+                    <li><a href="/searchAlerts"><i class="fa fa-bell"></i> Alerts</a></li>
+                </ul>
+            </div>
+            <div ng-show="roleId == 3">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li class="active"><a href="/profile"><i class="fa fa-tasks"></i> Profile</a></li>
+                    <li><a href="/createReport"><i class="fa fa-table"></i> Reports</a></li>
+                    <li><a href="/submitAlert"><i class="fa fa-bell"></i> Alerts</a></li>
+                    <li><a href="/checkIn"><i class="fa fa-list-ol"></i> Checkin</a></li>
+                </ul>   
+            </div>
+            <ul class="nav navbar-nav navbar-right navbar-user">                    
+                    <li><a href="/logout"><i class="fa fa-power-off"></i> Log Out</a></li>                       
+                </ul>
+          </div>  
+        </nav>
+                
+        <div class="alert alert-danger" ng-show='errorPanel'>
+        	<span class="glyphicon glyphicon-exclamation-sign"></span>
+        	Error: {{errorMsg}}
+    	</div>    	
+    	    	
+        <div class="alert alert-success" ng-show='successPanel'>
+        	<span class="glyphicon glyphicon-exclamation-sign"></span>
+        	Status: {{successMsg}}
+    	</div>    	
+                            
+        <div class="modal-body row" id="guardDetails" ng-show="displayMode">  			
+  			<div class="row text-center">
+  					<h2> Guard Details </h2>
+			</div>	
+  			<div class="col-md-8 container">        	  				
+  				<div class="content">  					
+  					<form class="form-horizontal">  					
+  						<fieldset>    
+    						<div class="form-group">      
+      							<label for="guardName" class="col-md-3">
+					                Guard Name:
+					            </label>
+					            <div class="col-md-6">
+					                <p class="form-control-static">{{guardDetails.firstName}} {{guardDetails.lastName}}</p>
+					            </div>
+							</div>
+							
+							<div class="form-group">      
+      							<label for="ssn" class="col-md-3">
+					                SSN number:
+					            </label>
+					            <div class="col-md-6">
+					                <p class="form-control-static">{{guardDetails.userSSN}}</p>
+					            </div>
+							</div>
+							
+							<div class="form-group">
+								<label for="buildingAssigned" class="col-md-3">
+					                Buildings assigned:
+					            </label>
+					            <div class="col-md-6">
+					            	<div ng-repeat="building in buildings" ng-show="buildings != ''">
+					            	<p class="form-control-static">{{building.buildingName}}</p>
+					                </div>
+					                <p class="form-control-static" ng-show="buildings == ''">No buildings currently assigned to this guard.</p>
+					            </div>     
+							</div>
+							
+							<div class="form-group">
+								<label for="startDate" class="col-md-3">
+					                Start Date:
+					            </label>
+					            <div class="col-md-6">                
+					                {{guardDetails.startDate}}            	          
+					            </div>
+							</div>
+							
+							<div class="form-group">
+								<label for="endDate" class="col-md-3">
+					                End Date:
+					            </label>
+					            <div class="col-md-6">                
+					                <p class="form-control-static">{{guardDetails.endDate}}</p>            	          
+					            </div>
+							</div>
+							
+							<div class="form-group">
+								<label for="slot" class="col-md-3">
+					                Slot:
+					            </label>
+					            <div class="col-md-6">                
+					                <p class="form-control-static">{{guardDetails.slotStartTime}} to {{guardDetails.slotEndTime}}</p>            	          
+					            </div>
+							</div>
+							
+							<div class="form-group">
+								<label for="checkpoints" class="col-md-3">
+									Check points:
+								</label>
+								<div class="col-md-6">
+									<table st-table="rowCollection" class="table table-striped"  ng-show="checkpoints != ''">
+										<thead>
+										<tr>
+											<th>S No.</th>
+											<th>Latitude</th>
+											<th>Longitude</th>
+											<th>Building</th>											
+										</tr>
+										</thead>
+										<tbody>
+										<tr ng-repeat="(i, checkpoint) in checkpoints track by $index">
+											<td>{{i+1}}</td>
+											<td>{{checkpoint.latitude}}</td>
+											<td>{{checkpoint.longitude}}</td>
+											<td>{{checkpoint.buildingName}}</td>											
+										</tr>
+										</tbody>
+									</table> 
+									<p class="form-control-static" ng-show="checkpoints == ''">No checkpoints currently assigned to this guard.</p>
+								</div>
+							</div>													
+						</fieldset>
+					</form>
+				</div>
+			</div>
+			
+			<div class="col-md-4">				
+				<button type="button" class="btn btn-primary" ng-click="switchToEdit()">
+                    Edit Guard
+                </button>
+                <p>
+                <p>
+                <button type="button" ng-hide="roleId == 3" class="btn btn-danger" ng-click="deleteGuard()">
+                    Delete Guard
+                </button>
+			</div>
+      	</div>
+    
+    
+	      <div id="guardEdit" ng-show="editMode"> 			
+  			<div class="row text-center">
+  					<h2>Edit Guard</h2>
+			</div>	
+  			<div class="col-md-10 container">        	  				
+  				<div class="content">  					
+  					<form class="form-horizontal" name="editGuard" ng-submit='saveChanges()'>  					
+  						<fieldset>    
+    						<div class="form-group">      
+      							<label for="guardFirstName" class="col-md-3">
+					                First Name:
+					            </label>
+					            <div class="col-md-8">
+					                <input type="text" class="form-control" name="editGuardFirstName" ng-model='guardDetails.firstName' placeholder="First Name" required />
+					                <span style="color:red" ng-show="editGuard.editGuardFirstName.$error.required">First Name is mandatory!</span>
+					            </div>
+							</div>
+							
+							<div class="form-group">      
+      							<label for="guardLastName" class="col-md-3">
+					                Last Name:
+					            </label>
+					            <div class="col-md-8">
+					                <input type="text" class="form-control" name="editGuardLastName" ng-model='guardDetails.lastName' placeholder="Last Name" required />
+					                <span style="color:red" ng-show="editGuard.editGuardLastName.$error.required">Last Name is mandatory!</span>
+					            </div>
+							</div>
+							
+							<div class="form-group">      
+      							<label for="editStreet" class="col-md-3">
+					                Street:
+					            </label>
+					            <div class="col-md-8">
+					                <input type="text" class="form-control" name="editStreet" ng-model='guardDetails.street' placeholder="Enter Street" required />
+					                <span style="color:red" ng-show="editGuard.editStreet.$error.required">Street is mandatory!</span>
+					            </div>
+							</div>	
+							
+							<div class="form-group">      
+      							<label for="editCity" class="col-md-3">
+					                City:
+					            </label>
+					            <div class="col-md-8">
+					                <input type="text" class="form-control" name="editCity" ng-model='guardDetails.city' placeholder="Enter City" required />
+					                <span style="color:red" ng-show="editGuard.editCity.$error.required">City is mandatory!</span>
+					            </div>
+							</div>		
+							
+							<div class="form-group">      
+      							<label for="editState" class="col-md-3">
+					                State:
+					            </label>
+					            <div class="col-md-8">
+					                <input type="text" class="form-control" name="editState" ng-model='guardDetails.state' placeholder="Enter State" required>
+					                <span style="color:red" ng-show="editGuard.editState.$error.required">State is mandatory!</span>
+					            </div>
+							</div>	
+							
+							<div class="form-group">      
+      							<label for="editZipcode" class="col-md-3">
+					                Zip code:
+					            </label>
+					            <div class="col-md-8">
+					                <input type="text" class="form-control" name="editZipcode" ng-model='guardDetails.zipcode' placeholder="Enter Zipcode" ng-pattern="/(^\d{5}$)|(^\d{5}-\d{4}$)/" required/>
+					                <span style="color:red" ng-show="editGuard.editZipcode.$error.pattern">Not a valid Zip Code!</span>
+                                    <span style="color:red" ng-show="editGuard.editZipcode.$error.required">Zip Code is mandatory!</span>
+					            </div>
+							</div>	
+														
+							<div class="form-group">      
+      							<label for="phoneNumber" class="col-md-3">
+					                Phone number:
+					            </label>
+					            <div class="col-md-8">
+					                <input type="text" class="form-control" name="editPhoneNumber" ng-model='guardDetails.phoneNumber' placeholder="1234567890" ng-value='guardDetails.phoneNumber' required/>
+					                <span style="color:red" ng-show="editGuard.editPhoneNumber.$error.required">Phone number is mandatory!</span>
+					            </div>
+							</div>	
+											
+							<div class="form-group" ng-show="roleId == 1">      
+      							<label for="ssn" class="col-md-3">
+					                SSN number:
+					            </label>
+					            <div class="col-md-8">
+					                <input type="text" class="form-control" name="editssn" ng-model='guardDetails.userSSN' placeholder="###-##-####" ng-pattern="/(^\d{3}-\d{2}-\d{4}$)/" ng-value='guardDetails.userSSN' required />
+					                <span style="color:red" ng-show="editGuard.editssn.$error.pattern">Not a valid SSN format!</span>
+					                <span style="color:red" ng-show="editGuard.editssn.$error.required">Social Security Number is mandatory!</span>
+					            </div>
+							</div>													
+							
+							<div class="form-group" ng-show="roleId == 1">
+								<label for="startDate" class="col-md-3">
+					                Start Date:
+					            </label>
+					            <div class="col-md-8">                
+					                <div class='input-group date' id='startDate'>
+						                <input type='date' class="form-control" name="editStartDate" ng-model='guardDetails.startDate' ng-value='guardDetails.startDate' required />
+						                <span style="color:red" ng-show="editGuard.editStartDate.$error.required">Start Date is mandatory!</span>
+                                        <span style="color:red" ng-show="editGuard.editStartDate.$error.date">Not a valid Date Format!</span>						                
+					            	</div>           	          
+					            </div>
+							</div>
+							
+							<div class="form-group" ng-show="roleId == 1">
+								<label for="endDate" class="col-md-3">
+					                End Date:
+					            </label>
+					            <div class="col-md-8">                
+					                <div class='input-group date' id='endDate'>
+						                <input type='date' class="form-control" name="editEndDate" ng-model='guardDetails.endDate' ng-value='guardDetails.endDate' required/>
+						                <span style="color:red" ng-show="editGuard.editEndDate.$error.required">End Date is mandatory!</span>
+                                        <span style="color:red" ng-show="editGuard.editEndDate.$error.date">Not a valid Date Format!</span>						                
+					            	</div>           	          
+					            </div>
+							</div>													
+						</fieldset>
+						<div class="row text-center">			            
+			                <button type="submit" class="btn btn-info">
+			                    Save changes
+			                </button>
+			                <input type="button" class="btn btn-warning" ng-click='resetChanges()' value="Reset">			                    			            
+			                <input type="button" class="btn btn-warning" ng-click='cancel()' value="Cancel">
+			            </div>
+					</form>
+					
+				</div>
+			</div>					
+      	</div>
+  	</div>
+      	
+  	 
+</body>
+
+
+
+</html>

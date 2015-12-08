@@ -1,0 +1,259 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workforce Management System</title>
+
+    <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/css/local.css" />
+
+    <script type="text/javascript" src="/stylesheets/js/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="/stylesheets/bootstrap/js/bootstrap.min.js"></script>   
+    
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>     
+	      <script>
+function workforce1($scope,$http,$location){
+	$scope.roleId = <%- JSON.stringify(roleId) %>;
+$scope.dateVal=new Date();
+
+		$http({
+			method: 'POST',
+			url: '/getBuildingsForGuards'
+		}).success(function(response){
+			if(response.Status == "Success") {
+				$scope.buildings = response.results;
+			}
+			 else if(res.errorCodeNo==500 || response.Status=="Failed"){
+                window.location = '/';
+            } else if(res.status === 'Failed'){
+                if(res.errorCodeNo!==undefined && res.errorCodeNo === '500'){
+                    window.location = '/';
+                }
+            }
+			else {
+			//alert("Hi");
+			$scope.errorPanel=true;
+			$scope.errorMsg ="No Data Available to display";
+		}
+		}).error(function(error){
+			alert("error");
+		});
+		
+var submitValidate = function(_form) {
+        for (field in _form) {
+            // look at each form input with a name attribute set
+            // checking if it is pristine and not a '$' special field
+            if (field[0] != '$' && _form[field].$pristine) {
+                // set it to the current model value (ie. leaving as is)
+                _form[field].$setViewValue(_form[field].$modelValue);
+            }
+        }   
+    };
+	$scope.clear = function() {
+		$scope.parkingLotNo="";$scope.vehicleNo="";$scope.vehicleModel="";
+		 $scope.violationDate="";$scope.description="";$scope.violationTime="";
+	};
+        
+$scope.create = function() {
+	alert("Hi");
+//submitValidate($scope.info);
+			   //    if($scope.info.$valid){
+			        alert("Hi valid data");
+			$http({			
+			method: 'POST',
+			url: '/creatingReport',
+			data:{"description": $scope.description,"buildingName": $scope.selectedbuilding,"violationType":$scope.selectedviolation,"parkingLotNo":$scope.parkingLotNo,
+			"vehicleNo":$scope.vehicleNo,"vehicleModel":$scope.vehicleModel,"violationDate":$scope.violationDate,"violationTime":$scope.violationTime}
+			}).success(function(response){
+			if(response.Status == "Success") {
+			alert("Inserted Successfully");
+			$scope.description='';
+			$scope.parkingLotNo='';
+			$scope.vehicleNo='';
+			$scope.vehicleModel='' ; $scope.violationDate='';$scope.dateTime='';
+			}
+			 else if(res.errorCodeNo==='500'){
+                window.location = 'index';
+            } else if(res.status === 'Failed'){
+                if(res.errorCodeNo!==undefined && res.errorCodeNo === '500'){
+                    window.location = '/';
+                }
+            }
+			else {
+				//alert(response.errMsg);
+			//alert("Hi");
+			$scope.errorPanel=true;
+		$scope.errorMsg ="No Data Available to display";
+		}
+		}).error(function(error){
+			alert("error");
+		});
+    		//}
+    	};
+
+    $scope.violations = [
+        {name:'Parking'},
+        {name:'Incident'},
+        {name:'Maintenance'},
+        {name:'Service'}
+    ];
+		$scope.parkingViolation = false;
+		$scope.otherViolation = false;
+		//if($scope.clients.name == 'clients1')
+		$scope.selectionChanged = function() {
+			alert(JSON.stringify($scope.selectedviolation.name));
+			if($scope.selectedviolation.name == 'Parking'){
+			$scope.parkingViolation = true;
+			$scope.otherViolation = false;
+			}
+			if($scope.selectedviolation.name != 'Parking'){
+			$scope.otherViolation = true;
+			$scope.parkingViolation = false;
+			}
+			}
+}
+</script>
+</head>
+<body ng-app="" ng-controller="workforce1" >
+
+    <div id="wrapper">
+         <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">                    
+        	<div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+               <div class="navbar-brand" >Work Force Management System</div>
+            </div>
+            <div class="collapse navbar-collapse navbar-ex1-collapse" >
+            <div ng-show="roleId == 1">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li><a href="/searchClients"><i class="fa fa-tasks"></i> Clients</a></li>
+                    <li><a href="/searchGuards"><i class="fa fa-tasks"></i> Guards</a></li>
+                    <li><a href="/searchReports"><i class="fa fa-table"></i> Reports</a></li>
+                    <li class="active"><a href="/searchAlerts"><i class="fa fa-bell"></i> Alerts</a></li>                        
+                    <li><a href="/searchBuildings"><i class="fa fa-list-ol"></i> Schedule</a></li>                    
+                </ul>
+            </div>
+            <div ng-show="roleId == 2">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li><a href="/profile"><i class="fa fa-tasks"></i> Profile</a></li>
+                    <li><a href="/searchReports"><i class="fa fa-table"></i> Reports</a></li>
+                    <li><a href="/searchAlerts"><i class="fa fa-bell"></i> Alerts</a></li>
+                </ul>
+            </div>
+            <div ng-show="roleId == 3">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li><a href="/profile"><i class="fa fa-tasks"></i> Profile</a></li>
+                    <li  class="active"><a href="/createReport"><i class="fa fa-table"></i> Reports</a></li>
+                    <li><a href="/submitAlert"><i class="fa fa-bell"></i> Alerts</a></li>
+                    <li><a href="/checkIn"><i class="fa fa-list-ol"></i> Checkin</a></li>
+                </ul>   
+            </div>
+            <ul class="nav navbar-nav navbar-right navbar-user">                    
+                    <li><a href="/logout"><i class="fa fa-power-off"></i> Log Out</a></li>                       
+                </ul>
+          </div>  
+        </nav>
+         <form class="form-horizontal" name="info">
+        <div class="col-md-10 container">
+<div>
+        <div class="row text-center">
+            <h2>Create Reports</h2>
+        </div>
+ <div>
+            <label for="Building" class="col-md-2">
+                Buildings:
+            </label>
+            <div class="col-md-6">
+                <select name="building" id="building" class="form-control" ng-model="selectedbuilding" ng-options="building.buildingName for building in buildings" >
+               
+                </select>
+            </div>            
+        </div>
+    <div>
+    </br></br>
+            <label for="violation" class="col-md-2">
+                violation:
+            </label>
+            <div class="col-md-6">
+                <select name="violation" id="violation" class="form-control" required ng-model="selectedviolation" ng-disabled="!selectedbuilding" ng-change="selectionChanged()" ng-options="violation.name for violation in violations" >
+                    
+                </select>
+            </div>            
+        </div>
+        </br></br>
+			<br>
+			<div class="form-group" >
+      							<label class="col-md-2">violation Date:</label>
+					            <div class="col-md-6">
+					                <input type="date" class="form-control" required ng-model="violationDate" placeholder="Enter violation date" max="dateVal">
+					            </div>
+							</div>
+				<div class="form-group" >
+				 <label class="col-md-2">Select Time</label>
+				 <div class="col-md-6">
+   				<input type="time"  class="form-control" name="input" required ng-model="violationTime" min="08:00" max="20:00"  />
+				</div></div>
+  				
+  				<div class="content" ng-show="parkingViolation"  class="col-md-6">  										
+  						<fieldset>    
+    						<div class="form-group">      
+      							<label class="col-md-2">Parking Lot No:</label>
+      							<div class="col-md-6">
+					            <input type="number" class="form-control" required ng-model="parkingLotNo" placeholder="Enter Parking No">
+								</div>							
+							</div>
+							<div class="form-group">      
+      							<label class="col-md-2">Vehicle No:</label>
+					            <div class="col-md-6">
+					                <input type="text" class="form-control" required ng-model="vehicleNo" placeholder="Enter vehicle No">
+					            </div>
+							</div>
+							<div class="form-group">      
+      							<label class="col-md-2">Vehicle Model:</label>
+					            <div class="col-md-6">
+					                <input type="text" class="form-control" required ng-model="vehicleModel" placeholder="Enter Vehicle Model">
+					            </div>
+							</div>						
+					</fieldset>
+					</div>
+
+  				<div class="content" ng-show="otherViolation">  									
+  						<fieldset> 
+  						
+      				<div class="form-group" >
+      							<label class="col-md-2">violation Description:</label>
+					            <div class="col-md-6">
+					                <textarea class="form-control" required ng-model="description" placeholder="Enter violation description">
+					            </textarea>
+					            </div>
+					</div></div>
+						
+							<div class="col-md-10">
+                <button type="submit" class="btn btn-info" ng-click="create()" ng-model="save"  ng-disabled="!selectedviolation">
+                    Save
+                </button>
+                &nbsp&nbsp
+                <input type="button" class="btn btn-info" ng-click="clear()" value="Clear">
+                   </input>
+              
+            </div>  
+					</fieldset>
+					</div>
+					</form>
+					</div>
+
+ 
+</body>
+</html>
+        

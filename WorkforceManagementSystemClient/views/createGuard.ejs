@@ -1,0 +1,279 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workforce Management System</title>
+
+    <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/css/local.css" />
+
+    <script type="text/javascript" src="/stylesheets/js/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="/stylesheets/bootstrap/js/bootstrap.min.js"></script>   
+
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+	<!--<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>-->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script> 
+	 <script src="http://code.angularjs.org/1.2.9/angular.js"></script>
+	
+	<script>  		
+	var app = angular.module('myApp', []);
+		
+		function guardController($scope,$http,$location) { 		
+			$scope.roleId = <%- JSON.stringify(roleId) %>;
+			
+			$scope.editForm = true;		
+			
+			var submitValidate = function(_form) {				
+		        for (field in _form) {
+		            // look at each form input with a name attribute set
+		            // checking if it is pristine and not a '$' special field		            
+		            if (field[0] != '$' && _form[field].$pristine) {
+		                // set it to the current model value (ie. leaving as is)
+		                _form[field].$setViewValue(_form[field].$modelValue);
+		            }
+		        }   
+		    };
+					
+			$scope.saveChanges =  function() {		
+				$scope.errorPanel = false;
+				$scope.creationStatus = false;
+				submitValidate($scope.createGuard);
+				if(!$scope.createGuard.$valid){
+		            return;
+		        } 		        
+				//take input from $scope.editGuardName, $scope.editssn, $scope.editStartDate, $scope.editEndDate (ng-model attributes)							
+				$http({
+	            method: 'POST',
+	            url: '/createNewGuard',
+	            data: { 'email': $scope.editEmail, 'password': $scope.editPassword, 'firstName': $scope.editFirstName, 'lastName': $scope.editLastName, 'startDate':$scope.editStartDate, 'endDate':$scope.editEndDate, 'userSSN':$scope.editUserSSN, 'street': $scope.editStreet, 'city':$scope.editCity, 'state':$scope.editState, 'zipcode':$scope.editZipcode, 'phoneNumber':$scope.editPhonenumber }	            	            
+	         }).success(function(result){	 
+                 	if(result.Status == 'Success')
+                 	{
+                 		$scope.creationStatus = true;                 		
+                 		$scope.editForm = false;
+                 		$scope.creationStatusMsg = "Guard created successfully!";
+                 	}
+                 	else
+                 	{
+                 		$scope.errorPanel = true;
+                 		$scope.creationStatus = false;
+                 		$scope.errorMsg = result.Status;
+                 	}                 										
+	        }).error(function(error){
+	            $scope.creationStatus = false;
+         		$scope.errorPanel = true;
+         		$scope.errorMsg = error;
+	        }); 	
+			}
+			
+			$scope.resetChanges = function() {
+				$scope.errorPanel = false;
+				$scope.creationStatus = false;
+				window.location = '/createGuard';				
+			}
+			
+			$scope.cancelChanges = function() {
+				window.location = '/searchGuards';
+			}
+		
+		}    
+	</script>  
+	    
+</head>
+<body ng-app="myApp" ng-controller="guardController">
+
+
+    <div id="wrapper">
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">                    
+        	<div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+               <div class="navbar-brand" >Work Force Management System</div>
+            </div>
+            <div class="collapse navbar-collapse navbar-ex1-collapse" >
+            <div ng-show="roleId == 1">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li><a href="/searchClients"><i class="fa fa-tasks"></i> Clients</a></li>
+                    <li class="active"><a href="/searchGuards"><i class="fa fa-tasks"></i> Guards</a></li>
+                    <li><a href="/searchReports"><i class="fa fa-table"></i> Reports</a></li>
+                    <li><a href="/searchAlerts"><i class="fa fa-bell"></i> Alerts</a></li>                    
+                    <li><a href="/searchBuildings"><i class="fa fa-list-ol"></i> Schedule</a></li>                    
+                </ul>
+            </div>
+            <div ng-show="roleId == 2">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li><a href="/profile"><i class="fa fa-tasks"></i> Profile</a></li>
+                    <li ><a href="/searchReports"><i class="fa fa-table"></i> Reports</a></li>
+                    <li><a href="/searchAlerts"><i class="fa fa-bell"></i> Alerts</a></li>
+                </ul>
+            </div>
+            <div ng-show="roleId == 3">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li><a href="/profile"><i class="fa fa-tasks"></i> Profile</a></li>
+                    <li><a href="/createReport"><i class="fa fa-table"></i> Reports</a></li>
+                    <li><a href="/submitAlert"><i class="fa fa-bell"></i> Alerts</a></li>
+                    <li class="active"><a href="/checkIn"><i class="fa fa-list-ol"></i> Checkin</a></li>
+                </ul>   
+            </div>
+            <ul class="nav navbar-nav navbar-right navbar-user">                    
+                    <li><a href="/logout"><i class="fa fa-power-off"></i> Log Out</a></li>                       
+                </ul>
+          </div>  
+        </nav>
+        
+        <div class="alert alert-danger" ng-show='errorPanel'>
+        	<span class="glyphicon glyphicon-exclamation-sign"></span>
+        	Error: {{errorMsg}}
+    	</div>    	
+    	    	
+        <div class="alert alert-success" ng-show='creationStatus'>
+        	<span class="glyphicon glyphicon-exclamation-sign"></span>
+        	Creation status: {{creationStatusMsg}}
+    	</div>  
+    
+	      <div id="guardCreate" ng-show='editForm'> 			
+  			<div class="row text-center">
+  					<h2>Create Guard</h2>
+			</div>	
+  			<div class="col-md-10 container">        	  				
+  				<div class="content">  					
+  					<form id="createGuard" class="form-horizontal" role="form" name="createGuard">  					
+  						<fieldset>    
+  							<div class="form-group">      
+      							<label for="editEmail" class="col-md-3">
+					                Guard's Email:
+					            </label>
+					            <div class="col-md-8">
+					                <input type="email" class="form-control" id="editEmail" ng-model='editEmail' placeholder="Enter Email" required>					                
+					            </div>
+							</div>
+							
+							<div class="form-group">      
+      							<label for="editEmail" class="col-md-3">
+					                Password:
+					            </label>
+					            <div class="col-md-8">
+					                <input type="password" class="form-control" id="editPassword" ng-model='editPassword' placeholder="Enter Password" required>
+					            </div>
+							</div>
+  						
+    						<div class="form-group">      
+      							<label for="editFirstName" class="col-md-3">
+					                First name:
+					            </label>
+					            <div class="col-md-8">
+					                <input type="text" class="form-control" id="editFirstName" ng-model='editFirstName' placeholder="Enter First Name" pattern="^([A-z]){3,}$" required>
+					            </div>
+							</div>
+							
+							<div class="form-group">      
+      							<label for="editLastName" class="col-md-3">
+					                Last name:
+					            </label>
+					            <div class="col-md-8">
+					                <input type="text" class="form-control" id="editLastName" ng-model='editLastName' placeholder="Enter Last Name" pattern="^([A-z]){3,}$" required>
+					            </div>
+							</div>
+							
+							<div class="form-group">      
+      							<label for="editssn" class="col-md-3">
+					                SSN number:
+					            </label>
+					            <div class="col-md-8">
+					                <input type="text" class="form-control" id="editssn" ng-model='editUserSSN' placeholder="###-##-####" required>
+					            </div>
+							</div>	
+							
+							<div class="form-group">      
+      							<label for="editStreet" class="col-md-3">
+					                Street:
+					            </label>
+					            <div class="col-md-8">
+					                <input type="text" class="form-control" id="editStreet" ng-model='editStreet' placeholder="Enter Street" pattern="^([A-z]){3,}$" required>
+					            </div>
+							</div>	
+							
+							<div class="form-group">      
+      							<label for="editCity" class="col-md-3">
+					                City:
+					            </label>
+					            <div class="col-md-8">
+					                <input type="text" class="form-control" id="editCity" ng-model='editCity' placeholder="Enter City" pattern="^([A-z]){3,}$" required>
+					            </div>
+							</div>		
+							
+							<div class="form-group">      
+      							<label for="editState" class="col-md-3">
+					                State:
+					            </label>
+					            <div class="col-md-8">
+					                <input type="text" class="form-control" id="editState" ng-model='editState' placeholder="Enter State" pattern="^([A-z]){2,}$">
+					            </div>
+							</div>	
+							
+							<div class="form-group">      
+      							<label for="editZipcode" class="col-md-3">
+					                Zip code:
+					            </label>
+					            <div class="col-md-8">
+					                <input type="text" class="form-control" id="editZipcode" ng-model='editZipcode' placeholder="Enter Zipcode" pattern="^([0-9]){5,5}$" >
+					            </div>
+							</div>	
+							
+							<div class="form-group">      
+      							<label for="editPhonenumber" class="col-md-3">
+					                Phone number:
+					            </label>
+					            <div class="col-md-8">
+					                <input type="number" class="form-control" id="editPhonenumber" ng-model='editPhonenumber' placeholder="Enter Phone number" pattern="^([0-9]){10,10}$">
+					            </div>
+							</div>										
+							
+							<div class="form-group">
+								<label for="startDate" class="col-md-3">
+					                Start Date:
+					            </label>
+					            <div class="col-md-8">                
+					                <div class='input-group date' id='startDate'>
+						                <input type='date' class="form-control" id="editStartDate" ng-model='editStartDate' required>						                
+					            	</div>           	          
+					            </div>
+							</div>
+							
+							<div class="form-group">
+								<label for="endDate" class="col-md-3">
+					                End Date:
+					            </label>
+					            <div class="col-md-8">                
+					                <div class='input-group date' id='endDate'>
+						                <input type='date' class="form-control" id="editEndDate" ng-model='editEndDate' required>						                
+					            	</div>           	          
+					            </div>
+							</div>													
+						</fieldset>
+						<div class="row text-center">			            
+			                <button type="submit" class="btn btn-info" ng-click='saveChanges()'>
+			                    Save changes
+			                </button>
+			               <input type="button" class="btn btn-warning" ng-click='resetChanges()' value="Reset">
+			               <input type="button" class="btn btn-warning" ng-click='cancelChanges()' value="Cancel">			                    			            
+			        </div>
+					</form>					
+				</div>
+			</div>					
+      	</div>
+  	</div>      	  	   
+</body>
+
+
+
+</html>

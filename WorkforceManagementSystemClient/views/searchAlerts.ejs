@@ -1,0 +1,463 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workforce Management System</title>
+
+    <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/css/local.css" />
+
+    <script type="text/javascript" src="/stylesheets/js/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="/stylesheets/bootstrap/js/bootstrap.min.js"></script>   
+    
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>     
+	
+	  <script>
+		angular.module('myApp', []).controller('searchAlertController', function($scope,$http,$location) {
+		
+		var roleId  = <%- JSON.stringify(roleId) %>;
+		var userId  = <%- JSON.stringify(userId) %>;
+		
+		$scope.roleId = <%- JSON.stringify(roleId) %>;
+		var today = new Date();
+		$scope.errorPanel = false;
+		$scope.clientDisplay = false;
+		if(roleId !== 2)
+		{
+		$scope.clientDisplay = true;
+		} else
+		{
+		$scope.clientDisplay = false;
+		}
+		
+			var selectedclient = $scope.selectedclient;
+				var selectedbuilding = $scope.selectedbuilding;
+				var selectedalert = $scope.selectedalert;
+				var selectedseverity = $scope.selectedseverity;
+				var selectedFromdate = $scope.alertFromdate;
+				var selectedTodate = $scope.alertTodate;
+				
+				if(roleId !== 2)
+				{
+					if(selectedclient !== undefined)
+					{var clientId = $scope.selectedclient.userId;
+					}
+					else
+					{var clientId = null;
+					}
+				}
+				else
+				{
+				var clientId = userId;
+				}
+				
+				if(selectedbuilding !== undefined)
+				{var buildingId = $scope.selectedbuilding.buildingId;
+				}
+				else
+				{var buildingId=null;}
+				
+				if(selectedalert !== undefined)
+				{var alertTypeId = $scope.selectedalert.alertTypeId;}
+				else
+				{var alertTypeId=null;}
+				
+				if(selectedseverity !== undefined)
+				{var severity = $scope.selectedseverity;}
+				else
+				{var severity=null;}
+			
+		$http({
+	            method: 'GET',
+	            url: '/clientcriteria'	            
+	            
+	         }).success(function(response){	           	
+
+	            if(response.status !== "fail")
+	            {
+	            
+	            $scope.clients = response;	            
+	            }
+	            else{
+	            alert(JSON.stringify(response));
+	             $scope.errorPanel = true; 
+	             $scope.errorMsg="No clients available";
+	           
+	             } 
+	        }).error(function(error){
+	           
+	            $scope.errorMsg=error;
+	            $scope.errorPanel = true; 
+	        }); 
+	        
+	        if(roleId !== 2)
+		{
+	        $scope.clientChanged = function() {
+	
+		$http({
+	            method: 'POST',
+	            url: '/buildingcriteria',	            
+	            data: { "clientId" : $scope.selectedclient.userId }
+	         }).success(function(response){
+	         if(response.status !== "fail")
+	            {	
+				  
+	            $scope.buildings = response;
+	            $scope.displayMode = false;
+	             $scope.errorPanel = false;   } 
+	            else{$scope.errorPanel = true; 
+	             
+	             }  
+	        }).error(function(error){
+	           
+	            $scope.errorMsg=error;
+	            $scope.errorPanel = true; 
+	        }); 
+		
+		}
+		}
+		else
+		{
+		$http({
+	            method: 'POST',
+	            url: '/buildingcriteria',	            
+	            data: { "clientId" : userId }
+	         }).success(function(response){
+	         if(response.status !== "fail")
+	            {	
+				  
+	            $scope.buildings = response;   } 
+	            else{$scope.errorPanel = true; 
+	             $scope.errorMsg="No buildings available";
+	             }  
+	        }).error(function(error){
+	           
+	            $scope.errorMsg=error;
+	            $scope.errorPanel = true; 
+	        }); 
+		
+		}
+		
+		$http({
+	            method: 'POST',
+	            url: '/alertcriteria',	            
+	         }).success(function(response){	
+	      
+	         if(response.status !== "fail")
+	            {
+	           
+	            $scope.alertcriterias = response;
+	            }
+	            else { $scope.errorPanel = true;
+	            $scope.errorMsg="No buildings available";
+	             }    
+	        }).error(function(error){
+	             
+	            $scope.errorMsg=error;
+	            $scope.errorPanel = true; 
+	        }); 
+		
+		//}
+		
+		
+				$http({
+	            method: 'POST',
+	            url: '/searchAlertsResults',	            
+	           data: { "clientId" : clientId, "buildingId" : buildingId, "alertTypeId" : alertTypeId, 
+	            "severity" : severity, "alertFromdate" : new Date(new Date().setDate(today.getDate()-7)), "alertTodate" : today, "roleId" : roleId }
+	         }).success(function(response){
+	        if(response.status !== "fail")
+	            {
+	            
+	            $scope.displayMode = true;
+	            $scope.alerts = response;
+	            }
+	            else
+	            {       
+	            
+	            $scope.displayMode = false; 
+	            $scope.errorPanel = true;   	
+	            $scope.errorMsg="No alerts were raised in the past one week";	
+	            }                 
+	        }).error(function(error){
+	           $scope.errorMsg=error;
+	            $scope.errorPanel = true; 
+	        }); 
+		
+		$scope.alertsToDisplay = function() {
+
+        
+       
+				$scope.displayMode = true;
+				$scope.errorPanel = false;
+				var selectedclient = $scope.selectedclient;
+				var selectedbuilding = $scope.selectedbuilding;
+				var selectedalert = $scope.selectedalert;
+				var selectedseverity = $scope.selectedseverity;
+				var selectedFromdate = $scope.alertFromdate;
+				var selectedTodate = $scope.alertTodate;
+				
+				if(roleId !== 2)
+				{
+					if(selectedclient !== undefined)
+					{var clientId = $scope.selectedclient.userId;
+					}
+					else
+					{var clientId = null;
+					}
+				}
+				else
+				{
+				var clientId = userId;
+				}
+				
+				if(selectedbuilding !== undefined)
+				{var buildingId = $scope.selectedbuilding.buildingId;
+				}
+				else
+				{var buildingId=null;}
+				
+				if(selectedalert !== undefined)
+				{var alertTypeId = $scope.selectedalert.alertTypeId;}
+				else
+				{var alertTypeId=null;}
+				
+				if(selectedseverity !== undefined)
+				{var severity = $scope.selectedseverity;}
+				else
+				{var severity=null;}
+				
+				if($scope.alertFromdate > $scope.alertTodate)
+		{
+		 $scope.errorMsg="Alert from date is greater than alert to date";
+	            $scope.errorPanel = true;
+	            $scope.displayMode = false; 
+		}
+		
+		else
+			{
+				$http({
+	            method: 'POST',
+	            url: '/searchAlertsResults',	            
+	            data: { "clientId" : clientId, "buildingId" : buildingId, "alertTypeId" : alertTypeId, 
+	            "severity" : severity, "alertFromdate" : $scope.alertFromdate, "alertTodate" : $scope.alertTodate, "roleId" : roleId }
+	         }).success(function(response){
+	        if(response.status !== "fail")
+	            {
+	            
+	            $scope.alerts = response;
+	            $scope.errorPanel = false;  
+	            }
+	            else
+	            {       
+	           
+	            $scope.displayMode = false; 
+	            $scope.errorPanel = true;   	
+	            $scope.errorMsg="No alerts found for search selection";	
+	            }                 
+	        }).error(function(error){
+	            $scope.errorMsg=error;
+	            $scope.errorPanel = true; 
+	        }); 
+			
+			}
+		
+			}
+			$scope.resetChanges = function() {
+			   
+				window.location = '/searchAlerts';
+				$scope.errorPanel = false;				
+			}
+    
+});
+</script>
+	
+	
+</head>
+<body ng-app="myApp" ng-controller="searchAlertController">
+
+<div>
+
+    <div id="wrapper">
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">                    
+        	<div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+               <div class="navbar-brand" >Work Force Management System</div>
+            </div>
+            <div class="collapse navbar-collapse navbar-ex1-collapse" >
+            <div ng-show="roleId == 1">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li><a href="/searchClients"><i class="fa fa-tasks"></i> Clients</a></li>
+                    <li><a href="/searchGuards"><i class="fa fa-tasks"></i> Guards</a></li>
+                    <li><a href="/searchReports"><i class="fa fa-table"></i> Reports</a></li>
+                    <li class="active"><a href="/searchAlerts"><i class="fa fa-bell"></i> Alerts</a></li>                    
+                    <li ><a href="/searchBuildings"><i class="fa fa-list-ol"></i> Schedule</a></li>                    
+                </ul>
+            </div>
+            <div ng-show="roleId == 2">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li ><a href="/profile"><i class="fa fa-tasks"></i> Profile</a></li>
+                    <li><a href="/searchReports"><i class="fa fa-table"></i> Reports</a></li>
+                    <li class="active"><a href="/searchAlerts"><i class="fa fa-bell"></i> Alerts</a></li>
+                </ul>
+            </div>
+            <div ng-show="roleId == 3">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li><a href="/profile"><i class="fa fa-tasks"></i> Profile</a></li>
+                    <li><a href="/createReport"><i class="fa fa-table"></i> Reports</a></li>
+                    <li><a href="/submitAlert"><i class="fa fa-bell"></i> Alerts</a></li>
+                    <li><a href="/checkIn"><i class="fa fa-list-ol"></i> Checkin</a></li>
+                </ul>   
+            </div>
+            <ul class="nav navbar-nav navbar-right navbar-user">                    
+                    <li><a href="/logout"><i class="fa fa-power-off"></i> Log Out</a></li>                       
+                </ul>
+          </div>  
+        </nav>
+<div>
+
+        <div class="alert alert-danger" ng-show="errorPanel">
+  			<span class="glyphicon glyphicon-exclamation-sign"></span>
+  			Error: {{errorMsg}}
+		</div>
+
+<div>
+
+        <div class="row text-center">
+            <h2>Search Alerts</h2>
+        </div>
+ 		<div id="clientCriteria" ng-show="clientDisplay">
+            <label for="Client" class="col-md-2">
+                Clients:
+            </label>
+            <div class="col-md-6">
+                <select name="client" id="client" class="form-control" ng-model="selectedclient" ng-change="clientChanged()" ng-options="client.firstName +' '+client.lastName for client in clients">
+                   
+                </select>
+            </div>            
+        </div>
+        </br></br>
+ 		<div>
+            <label for="Building" class="col-md-2">
+                Buildings:
+            </label>
+            <div class="col-md-6">
+                <select name="building" id="building" class="form-control" ng-model="selectedbuilding" ng-options="building.buildingName for building in buildings">
+                    
+                </select>
+            </div>            
+        </div>
+        </br>
+        </br>
+    	<div>
+            <label for="alerttype" class="col-md-2">
+                Alert Type:
+            </label>
+            <div class="col-md-6">
+                <select name="alerttype" id="alerttype" class="form-control" ng-model="selectedalert"  ng-options="alert.alertName for alert in alertcriterias">
+                    
+                </select>
+            </div>            
+        </div>
+                </br>
+        </br>
+         <div>
+            <label for="severitytype" class="col-md-2">
+                Severity Type:
+            </label>
+            <div class="col-md-6">
+                <select name="severitytype" id="severitytype" class="form-control" ng-model="selectedseverity">
+                 <option>High</option>
+                 <option>Medium</option>   
+                 <option>Low</option>      
+                </select>
+            </div>            
+        </div>
+            </br>
+        </br>
+        					<div>
+      							<label class="col-md-2">Alert Date From:</label>
+					            <div class="col-md-6">
+					                <input type="date" class="form-control" ng-model="alertFromdate" placeholder="search on alert date from">
+					            </div>
+							</div>
+							</br>
+        </br>
+							<div>
+      							<label class="col-md-2">Alert Date To:</label>
+					            <div class="col-md-6">
+					                <input type="date" class="form-control" ng-model="alertTodate" placeholder="search on alert date To">
+					            </div>
+							</div>
+	<div>
+							</br>
+							</br>
+		<div>
+        	<div class="col-md-2">
+                <button type="submit" class="btn btn-info" ng-click="alertsToDisplay()">
+                    GO
+                </button>
+                <button type="reset" class="btn btn-warning" ng-click='resetChanges()'>
+			                    Reset
+			                </button>
+            </div>
+</br>
+</br>
+        </div>
+             <div id="searchReport" ng-show="displayMode">
+       			<div class="col-md-9">
+  					<h2>Searched Alerts</h2>
+				</div>
+		<div class="col-md-10 container">        	  				
+  				<div class="content">  					
+
+    						<div class="form-group">
+ 
+								<table class="table table-striped">		
+								<tr>
+								<th>Client Name</th>
+								<th>Building Name</th>
+								<th>Guard Name</th>
+								<th>Description</th>
+								<th>Alert Name</th>
+								<th>Severity</th>
+								<th>Alert Date</th>
+								</tr>						
+								<tr ng-repeat="x in alerts">
+								<td>{{x.clientName}}</td>								 
+								<td>{{x.buildingName}}</td>
+								<td>{{x.guardName}}</td>
+								
+ 								<td>{{x.description}}</td>	
+ 								<td>{{x.alertName}}</td>	
+ 								<td>{{x.severity}}</td>		
+ 								<td>{{x.alertTime}}</td>							 
+								</tr>
+								</table>
+					         </div>
+					</div>
+			</div>
+		</div>
+
+  </div> 
+
+  </div> 
+       
+</body>
+
+
+
+</html>
+        

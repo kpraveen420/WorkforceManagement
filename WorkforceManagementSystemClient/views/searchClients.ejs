@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workforce Management System</title>
+
+    <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/css/local.css" />
+
+    <script type="text/javascript" src="/stylesheets/js/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="/stylesheets/bootstrap/js/bootstrap.min.js"></script>   
+    
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>     
+	
+	<script>
+	var app = angular.module('myApp', []);
+		function searchClientsController($scope,$http) { 			                      
+            $scope.userId = 0;
+            
+            $scope.errorPanel = false;
+				
+			$scope.roleId = <%- JSON.stringify(roleId) %>;
+
+            $scope.initializePage = function(){
+                $scope.createMode = false;
+                $scope.showMode = false;
+                $scope.searchMode = true;
+                $scope.editMode = false;
+            };
+
+            $scope.initializePage();
+
+            $scope.viewClient = function(){
+                $scope.createMode = false;
+                $scope.showMode = true;
+                $scope.searchMode = false;
+                $scope.editMode = false;
+
+            };
+
+            $scope.createClient = function() {
+                $scope.createMode = true;
+                $scope.showMode = false;
+                $scope.searchMode = false;
+                $scope.editMode = false;
+            };
+            
+            $scope.switchToEdit = function() {              
+                $scope.createMode = false;
+                $scope.showMode = false;
+                $scope.searchMode = false;
+                $scope.editMode = true;            
+            };
+            
+            $scope.displayClient =  function(value) {
+                $http({
+                    method: 'GET',
+                    url: '/displayClient/'+value 
+                }).success(function(res){             
+                    //alert(res.profile.profile);
+                    console.log(res.profile.profile);
+                    profile = res.profile.profile;
+                    if(res.err)
+                    {   
+                        alert(res.err);
+                        
+                    }                          
+                    else
+                    {
+                        $scope.firstName = profile.firstName;
+                        $scope.lastName = profile.lastName;
+                        $scope.email = profile.email;
+                        $scope.phone = profile.phoneNumber;
+                        $scope.street = profile.street;
+                        $scope.city = profile.city;
+                        $scope.state = profile.state;
+                        $scope.zipCode = profile.zipcode;
+                        $scope.ssn = profile.userSSN;
+                        $scope.cost = profile.serviceFee;
+                        $scope.startDate = profile.startDate;
+                        $scope.endDate = profile.endDate;
+                        $scope.userId = profile.userId;
+                        $scope.getBuildings(value);
+                        $scope.createMode = false;
+		                $scope.showMode = true;
+		                $scope.searchMode = false;
+		                $scope.editMode = false;
+                        sessionStorage.clientId = profile.userId;
+                        sessionStorage.clientName = profile.firstName +" " +profile.lastName;
+                    }                   
+                }).error(function(error){
+                    alert(res.Status);
+                });
+            }
+            
+            var clientId = <%- JSON.stringify(clientId) %>;
+            if(clientId != undefined && clientId != "")
+            {
+            	$scope.displayClient(clientId);
+        	}
+
+			$scope.startSearch = function() {				
+				if($scope.searchString != undefined && $scope.searchString != "")
+				{
+					$http({
+		            method: 'GET',
+		            url: '/searchClientByName/'+$scope.searchString		                   		           
+			         }).success(function(response){	   
+			         	if(response.Status == "Success")
+			         	{			         		
+			         		$scope.clients = response.rows;
+			         		$scope.resultsExist = true;		
+			         		$scope.errorPanel = false;	      
+			         		$scope.clientsExist = true;   		
+			         	} 	
+						else
+						{
+							$scope.errorPanel = true;
+         					$scope.errorMsg = response.Status;
+         					$scope.clientsExist = false;
+						}	         				         					         	   
+			        }).error(function(error){
+			            $scope.errorPanel = true;
+     					$scope.errorMsg = response.Status;
+			        });	
+				}	
+				else
+				{
+					$http({
+		            method: 'GET',
+		            url: '/getAllClients'		                   		           
+			         }).success(function(response){	   
+			         	if(response.Status == "Success")
+			         	{			         		
+			         		$scope.clients = response.rows;
+			         		$scope.resultsExist = true;		
+			         		$scope.errorPanel = false;	      
+			         		$scope.clientsExist = true;   		
+			         	} 	
+						else
+						{
+							$scope.errorPanel = true;
+         					$scope.errorMsg = response.Status;
+         					$scope.clientsExist = false;
+						}	         				         					         	   
+			        }).error(function(error){
+			            $scope.errorPanel = true;
+     					$scope.errorMsg = response.Status;
+			        });	
+				}
+	    							
+			};	
+			
+			
+            
+
+             $scope.getBuildings = function(value){
+                console.log('Sending request to get client buildings.');
+                $http({
+                    method: 'GET',
+                    url: '/getBuildingsForClient/:'+value 
+                }).success(function(res){
+                    console.log(res);
+                    if(res.error)
+                    {   
+                        console.log(res.error);
+                    }                          
+                    else
+                    {
+                        $scope.buildings = res.buildings;
+                        console.log($scope.buildings);
+                    }
+                });
+            }
+
+            var submitValidate = function(_form) {
+                for (field in _form) {
+                    // look at each form input with a name attribute set
+                    // checking if it is pristine and not a '$' special field
+                    if (field[0] != '$' && _form[field].$pristine) {
+                        // set it to the current model value (ie. leaving as is)
+                        _form[field].$setViewValue(_form[field].$modelValue);
+                    }
+                }   
+            };
+
+            $scope.initializePageCreateClient = function(){
+                $scope.firstName = null;
+                 $scope.lastName = null;
+                 $scope.email = null;
+                 $scope.ssn = null;
+                 $scope.startDate = null;
+                 $scope.endDate = null;
+                 $scope.cost = null;
+                 $scope.phone = null; 
+                 $scope.street = null;
+                 $scope.city = null; $scope.state = null;
+                 $scope.zipCode = null;
+                 $scope.userId = null;
+                 $scope.password = null;
+            }
+            $scope.saveClient = function(){
+                submitValidate($scope.createClientForm);
+                if($scope.createClientForm.$valid) {
+                    var clientDetails = {"firstName":$scope.firstName, "lastName":$scope.lastName, "email":$scope.email, "ssn":$scope.ssn, "startDate":$scope.startDate, "endDate":$scope.endDate, "cost":$scope.cost, "phone":$scope.phone, "street":$scope.street, "city":$scope.city, "state":$scope.state, "zipCode":$scope.zipCode, "userId":$scope.userId, password : $scope.password};
+
+                    $http({
+                        method: 'POST',
+                        url: '/createClient',
+                        data: clientDetails 
+                    }).success(function(res){             
+                        // alert(JSON.stringify(res));           
+                        if(res.status === "Success")
+                        {   
+                            alert("Client created successfully");
+                            $scope.createMode   = !$scope.createMode;
+                            $scope.searchMode = true;
+                            $scope.initializePageCreateClient();
+                        }                          
+                        else
+                        {
+                            alert(res.error);
+                            if(res.errorCodeNo!==undefined && res.errorCodeNo === '500'){
+                                window.location = '/';
+                            }
+                        }                   
+                    }).error(function(error){
+                        alert(res.Status);
+                    });
+                } else {
+                    alert('Please fill all the manidatory fields.');
+                }
+            }
+
+            $scope.updateClient = function(){
+                submitValidate($scope.editClientForm);
+                if($scope.editClientForm.$valid) {
+                    var clientDetails = {"firstName":$scope.firstName, "lastName":$scope.lastName, "email":$scope.email, "ssn":$scope.ssn, "startDate":$scope.startDate, "endDate":$scope.endDate, "cost":$scope.cost, "phone":$scope.phone, "street":$scope.street, "city":$scope.city, "state":$scope.state, "zipCode":$scope.zipCode, "userId":$scope.userId};
+
+                    $http({
+                        method: 'PUT',
+                        url: '/updateClient',
+                        data: {'clientDetails':clientDetails} 
+                    }).success(function(res){
+                       // alert(JSON.stringify(res));             
+                        if(res.status == "Success")
+                        {   
+                            alert("Client updated successfully");
+                            $scope.createMode = false;
+			                $scope.showMode = true;
+			                $scope.searchMode = false;
+			                $scope.editMode = false;
+                        }                          
+                        else
+                        {
+                            alert(res.error);
+                            if(res.errorCodeNo!==undefined && res.errorCodeNo === '500'){
+                                window.location = '/';
+                            }
+                        }                   
+                    }).error(function(error){
+                        alert(res.Status);
+                    });
+                }else{
+                    alert('Please fill all the manidatory fields.');
+                }
+            }
+            $scope.deleteClient = function(){
+                console.log('client id to delete is:'+$scope.userId);
+                $http({
+                    method :'DELETE',
+                    url : '/deleteClient/:'+$scope.userId
+                }).success(function(res){
+                    if(res.status === 'Failed'){
+                        alert(res.error);
+                        if(res.errorCodeNo!==undefined && res.errorCodeNo === '500'){
+                            window.location = '/';
+                        }
+                    } else if(res.status === 'Success'){
+                        alert('Client deleted successfully.');
+                        $scope.initializePage();
+                        $scope.clients = [];
+                    }
+                });
+            };
+            $scope.displayBuilding = function(buildingId) {
+            	sessionStorage.buildingId = buildingId;
+            	sessionStorage.displayScreen = "Details";
+            	window.location = '/displayBuilding';
+            };
+            $scope.createB = function(buildingId) {
+            	sessionStorage.displayScreen = "Create";
+            	window.location = '/displayBuilding';
+            };
+		}    
+	</script>   
+	
+	
+</head>
+<body ng-app="myApp" ng-controller="searchClientsController">
+
+    <div id="wrapper">
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">                    
+        	<div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+               <div class="navbar-brand" >Work Force Management System</div>
+            </div>
+            <div class="collapse navbar-collapse navbar-ex1-collapse" >
+            <div ng-show="roleId == 1">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li  class="active"><a href="/searchClients"><i class="fa fa-tasks"></i> Clients</a></li>
+                    <li><a href="/searchGuards"><i class="fa fa-tasks"></i> Guards</a></li>
+                    <li><a href="/searchReports"><i class="fa fa-table"></i> Reports</a></li>
+                    <li><a href="/searchAlerts"><i class="fa fa-bell"></i> Alerts</a></li>                    
+                    <li><a href="/searchBuildings"><i class="fa fa-list-ol"></i> Schedule</a></li>                    
+                </ul>
+            </div>
+            <div ng-show="roleId == 2">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li  class="active"><a href="/profile"><i class="fa fa-tasks"></i> Profile</a></li>
+                    <li ><a href="/searchReports"><i class="fa fa-table"></i> Reports</a></li>
+                    <li><a href="/searchAlerts"><i class="fa fa-bell"></i> Alerts</a></li>
+                </ul>
+            </div>
+            <div ng-show="roleId == 3">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li class="active"><a href="/profile"><i class="fa fa-tasks"></i> Profile</a></li>
+                    <li><a href="/createReport"><i class="fa fa-table"></i> Reports</a></li>
+                    <li ><a href="/submitAlert"><i class="fa fa-bell"></i> Alerts</a></li>
+                    <li><a href="/checkIn"><i class="fa fa-list-ol"></i> Checkin</a></li>
+                </ul>   
+            </div>
+            <ul class="nav navbar-nav navbar-right navbar-user">                    
+                    <li><a href="/logout"><i class="fa fa-power-off"></i> Log Out</a></li>                       
+                </ul>
+          </div>  
+        </nav>
+        
+        <div class="alert alert-danger" ng-show='errorPanel'>
+        	<span class="glyphicon glyphicon-exclamation-sign"></span>
+        	Error: {{errorMsg}}
+    	</div> 
+        
+        <div class="modal-body row" id="searchClients" ng-show="searchMode"> 
+            <div class="col-md-6">
+                <div class="form-group input-group">
+                    <input type="text" class="form-control" ng-model='searchString' pattern="^([A-z]){3,}$" placeholder="Enter client name">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" type="button" ng-click='startSearch()'><i class="fa fa-search"></i></button>
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <button style="float:right;" type="button" class="btn btn-primary" ng-click="createClient()">
+                    Create Client
+                </button>                
+            </div>
+            <div class="col-md-8 container" ng-show="clientsExist">
+                <div class="content">                   
+                    <form class="form-horizontal">                      
+                        <fieldset>                                                          
+                            <div class="form-group" >
+                                <label for="searchResults" class="col-md-3">
+                                    Search Results:
+                                </label>
+                                
+                            </div>                                  
+                                <div class="col-md-6">
+                                    <table st-table="rowCollection" class="table table-striped">                                        
+                                        <tbody>
+                                        <tr ng-repeat="client in clients">
+                                            <td><a href='' ng-click='displayClient(client.clientId)'>{{client.clientName}}</a></td>
+                                        </tr>
+                                        </tbody>
+                                    </table> 
+                                </div>
+                                                                        
+                        </fieldset>
+                    </form>
+                </div>
+            </div>
+            
+            
+        </div>
+
+        <div id="create" ng-show="createMode">            
+            <div class="row text-center">
+                    <h2>Create Client</h2>
+            </div>  
+            <div class="col-md-10 container">                           
+                <div class="content">                   
+                    <form class="form-horizontal" name="createClientForm" ng-submit="saveClient()" novalidate>
+                        <fieldset>    
+                            <div class="form-group">      
+                                <label for="firstName" class="col-md-3">
+                                    First Name:
+                                </label>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" name="fName" ng-pattern="/^[a-zA-Z\- ]+$/" ng-model="firstName" required>
+                                    <span style="color:red" ng-show="createClientForm.fName.$error.pattern">Not a valid First Name!</span>
+                                    <span style="color:red" ng-show="submitted && createClientForm.fName.$error.required">First Name is mandatory!</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">      
+                                <label for="lastName" class="col-md-3">
+                                    Last Name:
+                                </label>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" name="lName"  ng-pattern="/^[a-zA-Z\- ]+$/"  ng-model="lastName" required>
+                                    <span style="color:red" ng-show="createClientForm.lName.$error.pattern">Not a valid Last Name!</span>
+                                    <span style="color:red" ng-show="submitted && createClientForm.lName.$error.required">Last Name is mandatory!</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">      
+                                <label for="email" class="col-md-3">
+                                    Email:
+                                </label>
+                                <div class="col-md-6">
+                                    <input type="email" class="form-control" name="email" ng-model="email" required/>
+                                     <span style="color:red" ng-show="createClientForm.email.$error.email">Not a valid Email!</span>
+                                    <span style="color:red" ng-show="submitted && createClientForm.email.$error.required">Email is mandatory!</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">      
+                                <label for="password" class="col-md-3">
+                                    Temparary Password:
+                                </label>
+                                <div class="col-md-6">
+                                    <input type="password" class="form-control" name="passwd" ng-model="password" required/>
+                                    <span style="color:red" ng-show="submitted && createClientForm.passwd.$error.required">Password is mandatory!</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">      
+                                <label for="ssn" class="col-md-3">
+                                    Social Security Number:
+                                </label>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" name="ssn" ng-pattern="/^(?!000)(?!666)(?!9)\d{3}[- ]?(?!00)\d{2}[- ]?(?!0000)\d{4}$/" ng-model="ssn" required/>
+                                    <span style="color:red" ng-show="createClientForm.ssn.$error.pattern">Not a valid Social Security Number!</span>
+                                    <span style="color:red" ng-show="submitted && createClientForm.ssn.$error.required">Social Security Number is mandatory!</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">      
+                                <label for="phone" class="col-md-3">
+                                    Phone Number
+                                </label>
+                                <div class="col-md-6">
+                                    <input type="number" class="form-control" name="phone" ng-model="phone" required/>
+                                    <span style="color:red" ng-show="submitted && createClientForm.phone.$error.required">Phone number is mandatory!</span>
+                                </div>
+                            </div>
+                            
+                           <!--  <div class="form-group">
+                                <label for="buildingOwned" class="col-md-9">
+                                    Buildings Owned:
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-md-6">
+                                    <div ng-repeat="(i, building) in buildings track by $index">
+                                    <p class="form-control-static">buildings[i].buildingName</p>
+                                    </div>
+                                </div>     
+                            </div> -->
+                            
+                            <div class="form-group">
+                                <label for="startDate" class="col-md-3">
+                                    Start Date:
+                                </label>
+                                <div class="col-md-6">                
+                                    <div id='startDate'>
+                                        <input type='date' class="form-control"  name="start" ng-model="startDate" required/>
+                                        <span style="color:red" ng-show="submitted && createClientForm.start.$error.required">Start Date is mandatory!</span>
+                                        <span style="color:red" ng-show="createClientForm.start.$error.date">Not a Date Format!</span>
+                                    </div>                        
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="endDate" class="col-md-3">
+                                    End Date:
+                                </label>
+                                <div class="col-md-6">                
+                                    <div id='endDate'>
+                                        <input type='date' class="form-control" name="end" ng-model="endDate" required/>
+                                        <span style="color:red" ng-show="submitted && createClientForm.end.$error.required">End Date is mandatory!</span>
+                                        <span style="color:red" ng-show="createClientForm.end.$error.date">Not a Date Format!</span>
+                                    </div>                        
+                                </div>
+                            </div>  
+                            
+                            <div class="form-group">      
+                                <label for="cost" class="col-md-3">
+                                    Service Fee:
+                                </label>
+                                <div class="col-md-6">
+                                    <input type="number" class="form-control" name="fee" ng-model="cost" required/>
+                                    <span style="color:red" ng-show="submitted && createClientForm.fee.$error.required">Service Fee is mandatory!</span>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">      
+                                <label for="street" class="col-md-3">
+                                    Street
+                                </label>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" name="street" ng-model="street" required/>
+                                    <span style="color:red" ng-show="submitted && createClientForm.street.$error.required">Street is mandatory!</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">      
+                                <label for="city" class="col-md-3">
+                                    City
+                                </label>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" name="cty" ng-model="city" required/>
+                                    <span style="color:red" ng-show="submitted && createClientForm.cty.$error.required">City is mandatory!</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">      
+                                <label for="state" class="col-md-3">
+                                    State
+                                </label>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" name="state" ng-model="state" required/>
+                                    <span style="color:red" ng-show="submitted && createClientForm.state.$error.required">State is mandatory!</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">      
+                                <label for="zipCode" class="col-md-3">
+                                    zipCode
+                                </label>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" ng-model="zipCode" name="zip" ng-pattern="/(^\d{5}$)|(^\d{5}-\d{4}$)/" required/>
+                                    <span style="color:red" ng-show="createClientForm.zip.$error.pattern">Not a valid Zip Code!</span>
+                                    <span style="color:red" ng-show="submitted && createClientForm.zip.$error.required">Zip Code is mandatory!</span>
+                                </div>
+                            </div>
+                            <div class="row text-center">                        
+                            <button type="submit" class="btn btn-info" ng-click="submitted = true">
+                                Save changes
+                            </button>
+                            <input type="buton" value = "Cancel" class="btn btn-warning" ng-click='initializePage()'/>
+                        </fieldset>
+                    </form> 
+                </div>
+            </div>                  
+        </div>
+        
+        <div class="modal-body row" id="clientDetails" ng-show="showMode">           
+            <div class="row text-center">
+                    <h2> Client Details </h2>
+            </div>  
+            <div class="col-md-8 container">                            
+                <div class="content">                   
+                    <form class="form-horizontal">                      
+                        <fieldset>    
+                            <div class="form-group">      
+                                <label for="clientName" class="col-md-3">
+                                    First Name:
+                                </label>
+                                <div class="col-md-6">
+                                    <p class="form-control-static">{{firstName}}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">      
+                                <label for="clientName" class="col-md-3">
+                                    Last Name:
+                                </label>
+                                <div class="col-md-6">
+                                    <p class="form-control-static">{{lastName}}</p>
+                                </div>
+                            </div>
+
+                            <div class="form-group">      
+                                <label for="email" class="col-md-3">
+                                    Email:
+                                </label>
+                                <div class="col-md-6">
+                                    <p class="form-control-static">{{email}}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">      
+                                <label for="ssn" class="col-md-3">
+                                    SSN:
+                                </label>
+                                <div class="col-md-6">
+                                    <p class="form-control-static">{{ssn}}</p>
+                                </div>
+                            </div>
+
+                             <div class="form-group">      
+                                <label for="phone" class="col-md-3">
+                                    Phone Number:
+                                </label>
+                                <div class="col-md-6">
+                                    <p class="form-control-static">{{phone}}</p>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                   <label for="startDate" class="col-md-3">
+                                    Start Date:
+                                </label>
+                                <div class="col-md-6">
+                                    <p class="form-control-static">{{startDate}}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="endDate" class="col-md-3">
+                                    End Date:
+                                </label>
+                                <div class="col-md-6">                
+                                    <p class="form-control-static">{{endDate}}</p>                        
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="cost" class="col-md-3">
+                                    Service Fee:
+                                </label>
+                                <div class="col-md-6">
+                                    <p class="form-control-static">{{cost}}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">      
+                                <label for="street" class="col-md-3">
+                                    Street:
+                                </label>
+                                <div class="col-md-6">
+                                    <p class="form-control-static">{{street}}</p>
+                                </div>
+                            </div>
+
+                            <div class="form-group">      
+                                <label for="city" class="col-md-3">
+                                    City:
+                                </label>
+                                <div class="col-md-6">
+                                    <p class="form-control-static">{{city}}</p>
+                                </div>
+                            </div>
+
+                            <div class="form-group">      
+                                <label for="state" class="col-md-3">
+                                    State:
+                                </label>
+                                <div class="col-md-6">
+                                    <p class="form-control-static">{{state}}</p>
+                                </div>
+                            </div>
+
+                            <div class="form-group">      
+                                <label for="zipCode" class="col-md-3">
+                                    zipCode:
+                                </label>
+                                <div class="col-md-6">
+                                    <p class="form-control-static">{{zipCode}}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="buildingOwned" class="col-md-9">
+                                    Buildings Owned:
+                                </label>
+                            </div>
+                            <div class="form-group col-md-6">
+                                 <table st-table="rowCollection" class="table table-striped">
+                                    <tbody>
+                                    <tr ng-repeat="building in buildings">
+                                        <td><a href="" ng-click="displayBuilding(building.buildingId)">{{building.buildingName}}</a></td>
+                                    </tr>
+                                    </tbody>
+                                </table> 
+                            </div>                                 
+                        </fieldset>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="col-md-4">              
+                <button type="button" class="btn btn-primary" ng-click="switchToEdit()">
+                    Edit Client
+                </button>
+                <p>
+                <p>
+                <button type="button" class="btn btn-danger" ng-click ="deleteClient()" ng-show="roleId == 1">
+                    Delete Client
+                </button>
+                <p>
+                <p>
+                <button type="button" class="btn btn-primary" ng-click="createB()" ng-show="roleId == 1">
+                    Create Building
+                </button>
+            </div>
+        </div>
+
+        <div id="clientEdit" ng-show="editMode">            
+            <div class="row text-center">
+                    <h2>Edit Client</h2>
+            </div>  
+            <div class="col-md-10 container">                           
+                <div class="content">                   
+                    <form class="form-horizontal" name="editClientForm" ng-submit="updateClient()">                      
+                        <fieldset>    
+                            <div class="form-group">      
+                                <label for="firstName" class="col-md-3">
+                                    First Name:
+                                </label>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" name="fName" ng-model="firstName" required>                                    
+                                    <span style="color:red" ng-show="editClientForm.fName.$error.required">First Name is mandatory!</span>
+                                </div>
+                            </div>
+
+                             <div class="form-group">      
+                                <label for="lastName" class="col-md-3">
+                                    Last Name:
+                                </label>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" name="lName" ng-model="lastName" required>                                     
+                                    <span style="color:red" ng-show="editClientForm.lName.$error.required">Last Name is mandatory!</span>
+                                </div>
+                            </div>
+
+
+                            <div class="form-group">      
+                                <label for="email" class="col-md-3">
+                                    Email:
+                                </label>
+                                <div class="col-md-6">
+                                    <input type="email" class="form-control" name="email" ng-model="email">
+                                    <span style="color:red" ng-show="editClientForm.email.$error.email">Not a valid Email!</span>
+                                    <span style="color:red" ng-show="editClientForm.email.$error.required">Email is mandatory!</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group" ng-show="roleId == 1">      
+                                <label for="ssn" class="col-md-3">
+                                    Social Security Number:
+                                </label>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" ng-model="ssn" name="ssn" required >
+                                    <!-- <span style="color:red" ng-show="editClientForm.ssn.$error.pattern">Not a valid Social Security Number!</span> -->
+                                    <span style="color:red" ng-show="editClientForm.ssn.$error.required">Social Security Number is mandatory!</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">      
+                                <label for="phone" class="col-md-3">
+                                    Phone Number:
+                                </label>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" ng-model="phone" name="phone" required>
+                                    <span style="color:red" ng-show="editClientForm.phone.$error.required">Phone number is mandatory!</span>
+                                </div>
+                            </div>
+                            
+                            
+                            
+                            <div class="form-group" ng-show="roleId == 1">
+                                <label for="startDate" class="col-md-3">
+                                    Start Date:
+                                </label>
+                                <div class="col-md-6">                
+                                    <div id='startDate'>
+                                        <input type='date' class="form-control" name="start" nd-model = 'startDate'/>
+                                        <span style="color:red" ng-show="editClientForm.start.$error.required">Start Date is mandatory!</span>
+                                        <span style="color:red" ng-show="editClientForm.start.$error.date">Not a valid Date Format!</span>
+                                    </div>                        
+                                </div>
+                            </div>
+                            
+                            <div class="form-group" ng-show="roleId == 1">
+                                <label for="endDate" class="col-md-3">
+                                    End Date:
+                                </label>
+                                <div class="col-md-6">                
+                                    <div id='endDate'>
+                                        <input type='date' class="form-control" name="end" nd-model = 'endDate'/>
+                                         <span style="color:red" ng-show="editClientForm.end.$error.required">End Date is mandatory!</span>
+                                        <span style="color:red" ng-show="editClientForm.end.$error.date">Not a valid Date Format!</span>
+                                    </div>                        
+                                </div>
+                            </div>
+                            
+                            <div class="form-group" ng-show="roleId == 1">      
+                                <label for="cost" class="col-md-3">
+                                    Service Fee:
+                                </label>
+                                <div class="col-md-6">
+                                    <input type="number" class="form-control" name="fee" ng-model="cost">
+                                     <span style="color:red" ng-show="editClientForm.fee.$error.required">Service Fee is mandatory!</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">      
+                                <label for="street" class="col-md-3">
+                                    Street:
+                                </label>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" name="street" ng-model="street">
+                                    <span style="color:red" ng-show="editClientForm.street.$error.required">Street is mandatory!</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">      
+                                <label for="city" class="col-md-3">
+                                    City:
+                                </label>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" name="city" ng-model="city">
+                                    <span style="color:red" ng-show="editClientForm.city.$error.required">City is mandatory!</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">      
+                                <label for="state" class="col-md-3">
+                                    State:
+                                </label>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" name="state" ng-model="state">
+                                    <span style="color:red" ng-show="editClientForm.state.$error.required">State is mandatory!</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">      
+                                <label for="zipCode" class="col-md-3">
+                                    zipCode:
+                                </label>
+                                <div class="col-md-6">
+                                    <input type="number" class="form-control" name="zip" ng-model="zipCode">
+                                    <span style="color:red" ng-show="editClientForm.zip.$error.pattern">Not a valid Zip Code!</span>
+                                    <span style="color:red" ng-show="editClientForm.zip.$error.required">Zip Code is mandatory!</span>
+                                </div>
+                            </div>
+                            <div class="form-group" ng-show="roleId == 1">
+                                <label for="buildingOwned" class="col-md-9">
+                                    Buildings Owned:
+                                </label>
+                            </div>
+                             <div class="form-group" ng-show="roleId == 1">
+                                 <table st-table="rowCollection" class="table table-striped">
+                                    <tbody>
+                                    <tr ng-repeat="building in buildings">
+                                        <td><a href='#' ng-click='displayBuilding(building.buildingId)'>{{building.buildingId}}</a></td>
+                                        <td>{{building.buildingName}}</td>                                          
+                                    </tr>
+                                    </tbody>
+                                </table> 
+                            </div>
+                            <div class="row text-center">
+                        
+                            <button type="submit" class="btn btn-info">
+                                Save changes
+                            </button>
+                            <button class="btn btn-warning" ng-click="viewClient()">
+                                Cancel
+                            </button>
+                        </fieldset>
+                    </form> 
+                </div>
+                
+            </div>
+                            
+        </div>
+        
+        
+       
+  	</div>
+</body>
+</html>

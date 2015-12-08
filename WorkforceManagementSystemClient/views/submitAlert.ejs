@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workforce Management System</title>
+
+    <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/css/local.css" />
+
+    <script type="text/javascript" src="/stylesheets/js/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="/stylesheets/bootstrap/js/bootstrap.min.js"></script>   
+    
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>     
+    
+    <script type="text/javascript">
+var app = angular.module('myApp', []);  
+function alertsController($scope, $http){
+	$scope.roleId = <%- JSON.stringify(roleId) %>;
+    $scope.alerts = [];
+    $scope.dataToSend = {};
+    $scope.saveAlert = function(){
+        $http({
+            method : 'POST',
+            url : '/saveAlert',
+            data : {
+                alert : $scope.dataToSend
+            }
+        }).success(function(res){
+            if(res.errorCodeNo===500){
+                window.location = 'index';
+            } else if(res.status === 'Success'){
+                alert('Alert submitted successfully');
+                $scope.dataToSend = {};
+            } else if(res.status === 'Failed'){
+                //alert(res.error);
+                alert("No data to submit");
+                if(res.errorCodeNo!==undefined && res.errorCodeNo === '500'){
+                    window.location = '/';
+                }
+            }
+        })
+    };
+
+    $scope.getAlerts = function(){
+        $http({
+            method : 'GET',
+            url:'getAllAlerts'
+        }).success(function(res){
+            if(res.status === 'Failed'){
+                alert(res.error);
+            } else {
+                $scope.alerts = res.alerts;
+            }
+        })
+    }
+    $scope.getBuildings = function(){
+        $http({
+            method:'GET',
+            url:'/getBuildings'
+        }).success(function(res){
+            console.log(res);
+            if(res.status === 'Failed'){
+                alert(res.error);
+                if(res.errorCodeNo!==undefined && res.errorCodeNo === '500'){
+                    window.location = '/';
+                }
+            } else if(res.status === 'Success'){
+                $scope.buildings = res.buildings;
+                // console.log($scope.buildings[0]);
+            }
+        })
+    }
+    $scope.getBuildings();
+    $scope.getAlerts();
+
+
+
+}
+
+</script>
+    
+</head>
+<body ng-app="myApp" ng-controller = "alertsController">
+<form>
+    <div id="wrapper">
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">                    
+        	<div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+               <div class="navbar-brand" >Work Force Management System</div>
+            </div>
+            <div class="collapse navbar-collapse navbar-ex1-collapse" >
+            <div ng-show="roleId == 1">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li><a href="/searchClients"><i class="fa fa-tasks"></i> Clients</a></li>
+                    <li><a href="/searchGuards"><i class="fa fa-tasks"></i> Guards</a></li>
+                    <li><a href="/searchReports"><i class="fa fa-table"></i> Reports</a></li>
+                    <li class="active"><a href="/searchAlerts"><i class="fa fa-bell"></i> Alerts</a></li>                    
+                    <li><a href="/searchBuildings"><i class="fa fa-list-ol"></i> Schedule</a></li>                    
+                </ul>
+            </div>
+            <div ng-show="roleId == 2">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li><a href="/profile"><i class="fa fa-tasks"></i> Profile</a></li>
+                    <li ><a href="/searchReports"><i class="fa fa-table"></i> Reports</a></li>
+                    <li class="active"><a href="/searchAlerts"><i class="fa fa-bell"></i> Alerts</a></li>
+                </ul>
+            </div>
+            <div ng-show="roleId == 3">
+                <ul class="nav navbar-nav side-nav">
+                    <li><a href="/dashboard"><i class="fa fa-bullseye"></i> Dashboard</a></li>
+                    <li><a href="/profile"><i class="fa fa-tasks"></i> Profile</a></li>
+                    <li><a href="/createReport"><i class="fa fa-table"></i> Reports</a></li>
+                    <li class="active"><a href="/submitAlert"><i class="fa fa-bell"></i> Alerts</a></li>
+                    <li><a href="/checkIn"><i class="fa fa-list-ol"></i> Checkin</a></li>
+                </ul>   
+            </div>
+            <ul class="nav navbar-nav navbar-right navbar-user">                    
+                    <li><a href="/logout"><i class="fa fa-power-off"></i> Log Out</a></li>                       
+                </ul>
+          </div>  
+        </nav>
+      
+        <div class="row text-center">
+                    <h2>Submit Alert</h2>
+        </div> 
+        <div class="col-md-10 container">
+            <div class="content">                   
+                    <form class="form-horizontal">                      
+                        <fieldset>    
+                            <div class="form-group">  
+                                <label for="AlertTypes" class="col-md-3"></label>
+                                <label for="AlertTypes" class="col-md-3">
+                                    Alert Type Id:
+                                </label>
+                                <div class="col-md-6">
+                                    <select name="AlertTypes" ng-model="dataToSend.alertId" class="form-control">
+                                        <option ng-repeat='alert in alerts' value='{{alert.alertTypeId}}'>{{alert.alertTypeId}}-{{alert.alertName}}</option>
+                                    </select>
+                                </div> 
+                            </div>
+                            <div class="form-group">  
+                                <label for="AlertTypes" class="col-md-3"></label>
+                                <label for="AlertTypes" class="col-md-3">
+                                    Severity:
+                                </label>
+                                <div class="col-md-6">
+                                    <select name="AlertTypes" ng-model="dataToSend.severity" class="form-control">
+                                        <option value ='HIGH'>High</option>
+                                        <option value = 'MEDIUM'>Medium</option>
+                                        <option value = 'LOW'>Low</option>
+                                    </select>
+                                </div> 
+                            </div> 
+                            <div class="form-group">  
+                                <label for="AlertTypes" class="col-md-3"></label>
+                                <label for="AlertTypes" class="col-md-3">
+                                    Description:
+                                </label>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" ng-model="dataToSend.description" placeholder="Enter the Description">
+                                </div>  
+                            </div>
+                            
+                            <div class="form-group">  
+                                <label for="AlertTypes" class="col-md-3"></label>
+                                <label for="AlertTypes" class="col-md-3">
+                                    Building Id:
+                                </label>
+                                <div class="col-md-6">
+                                    <select name="selectedBuildingId" ng-model="dataToSend.building" ng-change="getCheckpoints(building)" class="form-control">
+                                        <option ng:repeat="building in buildings" value="{{building.buildingId}}">{{building.buildingId}}-{{building.buildingName}}-{{building.street}}</option>
+                                    </select>
+                                </div> 
+                            </div>    
+
+                            <!-- <div class="form-group">  
+                                <label for="AlertTypes" class="col-md-3"></label>                 
+                                <label for="AlertTypes" class="col-md-3">
+                                    Guard Id:
+                                </label>
+                                <div class="col-md-6">
+                                    <select name="GuardType" ="AlertTypes" class="form-control">
+                                        <option>--Please Select--</option>
+                                    </select>
+                                </div> 
+                            </div>  -->
+                            
+                            <div class="row text-center">
+                                <label></label>
+                            </div>
+                            <div class="row text-center">
+                                <button type="submit" class="btn btn-info" ng-click="saveAlert()" ng-disabled="!dataToSend.building">
+                                    Submit
+                                </button>
+                            </div>
+                        </fieldset>                 
+                    </form>
+            <div>
+            
+        
+        </div>
+    </div>
+</form>
+</body>
+
+
+</html>
+    
